@@ -9,6 +9,8 @@
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
+// @updateURL    https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js  
+// @downloadURL  https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js
 // @run-at document-end
 // @grant GM_setValue
 // @grant GM_getValue
