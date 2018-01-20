@@ -48,7 +48,7 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
 (function() {
     'use strict';
 
-        function ajaxJQ(param/*img,url_link, elem*/){
+        function ajaxJQ(param){
         console.log("Ajax proceed...");
 
         var button = param.button,
@@ -164,7 +164,6 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
 
         // Если класс заголовка добавляем свой заголовок для кнопки
             if(this.className == "backgr") {
-                //$(this).append('<td width="1px">Спойлер</td>');
                 $('<td width="1px">Спойлер</td>').prependTo(this);
             } else {
                 // Если нет получаем информацию
@@ -220,7 +219,6 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
                     }
                 });
 
-                //$(this).append(newI);
                 $(newI).prependTo(this);
             }
         });
