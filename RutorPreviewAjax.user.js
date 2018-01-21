@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RutorPreviewAjax
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/AlekPet/
 // @version      1.0
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
