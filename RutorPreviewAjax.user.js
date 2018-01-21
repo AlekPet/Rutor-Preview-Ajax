@@ -11,6 +11,7 @@
 // @match        http://rutor.is/*
 // @updateURL    https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js  
 // @downloadURL  https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js
+// @icon         https://raw.githubusercontent.com/AlekPet/RutorPreviewAjax/master/assets/images/icon.png
 // @run-at document-end
 // @grant GM_setValue
 // @grant GM_getValue
