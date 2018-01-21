@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
-// @license      MIT
+// @license     MIT;
 // @match        http://tor-ru.net/*
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
