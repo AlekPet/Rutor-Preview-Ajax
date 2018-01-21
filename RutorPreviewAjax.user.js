@@ -21,6 +21,7 @@
 GM_addStyle("\
 .mDiv{width: 250px;border: 3px double #FFA302;position: fixed;right: 9px;top: 316px;text-align: center;color:white;}\
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00;}\
+.mDiv_inner{overflow-y: scroll;max-height: 400px;}\
 \
 .mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}\
 \
