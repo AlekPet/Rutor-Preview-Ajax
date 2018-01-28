@@ -135,7 +135,6 @@ div.seeEl div img {box-shadow: 2px 2px 5px black;}\
                     if(imgSmall.length>1){
                         let elOut = imgSmall[0];
                         for(let i of imgSmall){
-                            console.log(i,i.width);
                             if(i.height > elOut.height) {
                                 elOut = i;
                             }
