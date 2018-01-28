@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RutorPreviewAjax
 // @namespace    https://github.com/AlekPet/
-// @version      1.0
+// @version      1.1
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license     MIT;
@@ -146,6 +146,11 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
                     '</div>');
 
         $("#sidebar").append(div);
+        
+        let maxTop = $(".sideblock:nth-child(2)").offset().top+parseFloat($(".sideblock:nth-child(2)").css("height"));
+        $(window).scroll(function() {
+            if($(window).scrollTop() >= maxTop) $( ".mDiv" ).css({"position":"fixed", "top":"0px"}); else $( ".mDiv" ).css( "position",""); 
+        }); 
 
         $("#hideAll").click(function(){
             if($(".my_tr:visible").length){
