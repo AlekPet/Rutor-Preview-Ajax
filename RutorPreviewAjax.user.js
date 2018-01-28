@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         RutorPreviewAjax
 // @namespace    https://github.com/AlekPet/
-// @version      1.1
+// @version      1.2
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
-// @license     MIT;
+// @license      MIT; https://opensource.org/licenses/MIT
 // @match        http://tor-ru.net/*
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
@@ -42,8 +42,9 @@ div#my_content tr:hover { background-color: white;}\
 div#hideAll {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}\
 div#hideAll:hover{background: linear-gradient(#2fc12f,#246318);}\
 \
-div.seeEl {width: 80%;margin: 3px auto;background: linear-gradient(#e412ea,#127080);    padding: 10px 5px;cursor: pointer;overflow: hidden;height: 25px;line-height: 1;font-size: 0.8em;    box-sizing: content-box;}\
-div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
+div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;}\
+div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color:blue; color: #8e0000;}\
+div.seeEl div img {box-shadow: 2px 2px 5px black;}\
 \
 ");
 
@@ -96,9 +97,10 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
 
                 $(content).find("#hiden_cc").append(tableCom.prev(),tableCom.prev().prev(),tableCom);
 
-                let cloneButton = (button.clone(true)).attr("title","Скрыть раздачу");
+                let cloneButton = (button.clone(true)).attr("title","Скрыть раздачу"),
 
-                let spoiler = $("<div class='footSpoiler'></div>").html(cloneButton);
+                    spoiler = $("<div class='footSpoiler'></div>").html(cloneButton);
+
                 $(content).append(spoiler);
 
                 content.id = "my_content";
@@ -122,7 +124,31 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
                     // Add see
                     $(".mDiv_title.opens").show();
                     let textPop = $(elem).children(1).children()[3].innerText,
-                        elSee = $('<div class="seeEl"></div>').attr('title',textPop).text(textPop);
+
+                        imgSmall =  $(elem).next().find("img").filter(function(i,val){
+                            if(val.width > 200 && !/banner/i.test(this.src)){
+                                return this;
+                            }
+                    });
+
+                    if(imgSmall.length>1){
+                        let elOut = imgSmall[0];
+                        for(let i of imgSmall){
+                            console.log(i,i.width);
+                            if(i.height > elOut.height) {
+                                elOut = i;
+                            }
+                        }
+                        imgSmall = elOut;
+                    } else {
+                    imgSmall = imgSmall[0];
+                    }
+
+                        //elSee = $('<div class="seeEl"></div>').attr('title',textPop).text(textPop);
+                    let imgihtml = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"><img src="'+imgSmall.src+'" width="50px"></div>'+
+                                  '<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;">'+textPop+'</div>'),
+                        elSee = $('<div class="seeEl"></div>').attr('title',textPop).html(imgihtml);
+
 
                     $(elSee).click(function(){
                         let offset = $(elem).offset().top;
@@ -130,7 +156,7 @@ div.seeEl:hover{background: linear-gradient(#2c26a9,#b400ff);}\
                     });
 
                     $(elem).data(elSee);
-                    $(".mDiv_inner").append(elSee);
+                    $(".mDiv_inner").append(elSee).animate({scrollTop:$("div.mDiv_inner").offset().top}, 500, 'swing');
 
                 });
             }
