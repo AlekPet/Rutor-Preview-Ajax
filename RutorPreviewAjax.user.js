@@ -141,7 +141,7 @@ div.seeEl div img {box-shadow: 2px 2px 5px black;}\
                         }
                         imgSmall = elOut.src;
                     } else {
-                    imgSmall = imgSmall.length == 0 ? no_image : imgSmall[0].src;
+                    imgSmall = imgSmall.length === 0 ? no_image : imgSmall[0].src;
                     }
 
                         //elSee = $('<div class="seeEl"></div>').attr('title',textPop).text(textPop);
