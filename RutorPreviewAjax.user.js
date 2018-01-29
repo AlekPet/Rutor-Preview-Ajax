@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RutorPreviewAjax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.1
+// @version      1.2.2
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@
 // @downloadURL  https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/RutorPreviewAjax/master/assets/images/icon.png
 // @run-at document-end
+// @noframes
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_addStyle
@@ -240,7 +241,30 @@ div.seeEl div img {box-shadow: 2px 2px 5px black;}\
                                     // Add see
                                     $(".mDiv_title.opens").show();
                                     let textPop = $(m_elem).children(1).children()[3].innerText,
-                                        elSee = $('<div class="seeEl"></div>').attr('title',textPop).text(textPop);
+
+                                        imgSmall =  $(m_elem).next().find("img").filter(function(i,val){
+                                            if(val.width > 200 && !/banner/i.test(this.src)){
+                                                return this;
+                                            }
+                                        });
+
+                                    if(imgSmall.length>1){
+                                        let elOut = imgSmall[0];
+                                        for(let i of imgSmall){
+                                            if(i.height > elOut.height) {
+                                                elOut = i;
+                                            }
+                                        }
+                                        imgSmall = elOut.src;
+                                    } else {
+                                        imgSmall = imgSmall.length === 0 ? no_image : imgSmall[0].src;
+                                    }
+
+                                    //elSee = $('<div class="seeEl"></div>').attr('title',textPop).text(textPop);
+                                    let imgihtml = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"><img src="'+imgSmall+'" width="50px"></div>'+
+                                                      '<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;">'+textPop+'</div>'),
+                                        elSee = $('<div class="seeEl"></div>').attr('title',textPop).html(imgihtml);
+
                                     $(m_elem).data(elSee);
                                     $(".mDiv_inner").append(elSee);
 
