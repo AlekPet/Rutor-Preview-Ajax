@@ -264,8 +264,14 @@ div.seeEl div img {box-shadow: 2px 2px 5px black;}\
                                                       '<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;">'+textPop+'</div>'),
                                         elSee = $('<div class="seeEl"></div>').attr('title',textPop).html(imgihtml);
 
+                                    $(elSee).click(function(){
+                                        let offset = $(m_elem).offset().top;
+                                        $('html, body').animate({scrollTop:offset}, 500, 'swing');
+                                    });
+
                                     $(m_elem).data(elSee);
-                                    $(".mDiv_inner").append(elSee);
+
+                                    $(".mDiv_inner").append(elSee).animate({scrollTop:$("div.mDiv_inner").offset().top}, 500, 'swing');
 
                                 }
 
