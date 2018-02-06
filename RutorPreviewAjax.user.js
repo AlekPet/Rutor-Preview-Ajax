@@ -9,9 +9,9 @@
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
-// @updateURL    https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js  
-// @downloadURL  https://github.com/AlekPet/RutorPreviewAjax/raw/master/RutorPreviewAjax.user.js
-// @icon         https://raw.githubusercontent.com/AlekPet/RutorPreviewAjax/master/assets/images/icon.png
+// @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
+// @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
+// @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
 // @run-at document-end
 // @noframes
 // @grant GM_setValue
