@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         RutorPreviewAjax
+// @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
 // @version      1.2.3
 // @description  Предпросмотр раздач на сайте
