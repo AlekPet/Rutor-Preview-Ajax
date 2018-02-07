@@ -170,13 +170,13 @@ function modifyData(param){
 
     content.id = "my_content";
 
-    let nextEl = $(elem).next().children(0);
+    let nextEl = $(elem).next().children(0),
 
-    let lenIMG = $(content).find("img").length;
+        lenIMG = $(content).find("img").length;
 
     $(nextEl).html(content);
 
-    if(lenIMG>0){
+    if(lenIMG > 0){
         let imgLoaded = 0;
 
         $(nextEl).find("img").on('load', function() {
@@ -198,6 +198,8 @@ function modifyData(param){
                 $(val).error();
             }
         });
+    } else {
+        ShowIHide({button:button,elem:elem});
     }
 
 }
