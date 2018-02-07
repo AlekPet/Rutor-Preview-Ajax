@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.3
+// @version      1.2.4
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -43,8 +43,8 @@ div#my_content tr:hover { background-color: white;}\
 div#hideAll {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}\
 div#hideAll:hover{background: linear-gradient(#2fc12f,#246318);}\
 \
-div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;}\
-div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color:blue; color: #8e0000;}\
+div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}\
+div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}\
 div.seeEl div img {box-shadow: 2px 2px 5px black;}\
 \
 ");
@@ -114,6 +114,8 @@ function ShowIHide(param){
 
             }
 
+            $(".mDiv_title.opens").text('Открытые '+'('+$(".seeEl").length+')');
+
             // Back offset on page
             $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
         });
@@ -169,7 +171,35 @@ function modifyData(param){
     content.id = "my_content";
 
     let nextEl = $(elem).next().children(0);
+
+    let lenIMG = $(content).find("img").length;
+
     $(nextEl).html(content);
+
+    if(lenIMG>0){
+        let imgLoaded = 0;
+
+        $(nextEl).find("img").on('load', function() {
+            imgLoaded++;
+            if(imgLoaded === lenIMG){
+                ShowIHide({button:button,elem:elem});
+            }
+        })
+            .on('error', function() {
+            imgLoaded++;
+            if(imgLoaded === lenIMG){
+                ShowIHide({button:button,elem:elem});
+            }
+        })
+            .each(function(i,val) {
+            if($(val).complete) {
+                $(val).load();
+            } else if($(val).error) {
+                $(val).error();
+            }
+        });
+    }
+
 }
 
 // Ajax запрос
@@ -186,8 +216,6 @@ function ajaxJQ(param){
 
             let ObjData = {data:data,button:button,elem:elem};
             modifyData(ObjData);
-            ShowIHide(ObjData);
-
         }
     });
 }
@@ -211,6 +239,7 @@ function makePanel(){
         if($(".my_tr:visible").length){
             $(".my_tr").fadeOut("slow");
             $("img[id^='butSpoiler_'").css("transform", "scaleY(1)").attr("title","Показать раздачу");
+            $(".mDiv_title.opens").text('Открытые');
 
             // Remove see
             $(".mDiv_title.opens").hide();
