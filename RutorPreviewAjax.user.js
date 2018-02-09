@@ -81,8 +81,8 @@ function ShowIHide(param){
                 $(".mDiv_title.opens").show();
                 let textPop = $(elem).children(1).children()[3].innerText,
 
-                    imgSmall =  $(elem).next().find("img").filter(function(i,val){
-                        if(val.width > 150 && $(val).attr("error_image") !== "1" && !/banner/i.test(this.src)){
+                    imgSmall =  $(elem).next(".my_tr").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
+                        if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
                             return this;
                         }
                     });
@@ -175,6 +175,7 @@ function modifyData(param){
         lenIMG = IMGElements.length;
 
         if(lenIMG > 0){
+
         let imgLoaded = 0;
 
         $(IMGElements).on('load', function() {
@@ -210,6 +211,7 @@ function modifyData(param){
     // Images end
 
     let nextEl = $(elem).next().children(0);
+
         $(nextEl).html(content);
 
 }
