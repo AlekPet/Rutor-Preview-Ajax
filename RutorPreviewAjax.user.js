@@ -95,7 +95,7 @@ function ShowIHide(param){
                         }
                     }
                     imgSmall = elOut.src;
-                } else {
+                } else  {
                     imgSmall = imgSmall.length === 0 ? no_image : imgSmall[0].src;
                 }
 
@@ -170,37 +170,26 @@ function modifyData(param){
 
     content.id = "my_content";
 
-    let nextEl = $(elem).next().children(0),
-
-        lenIMG = $(content).find("img").length;
-
-    $(nextEl).html(content);
+    //Images
+    let IMGElements = $(content).find("table#details tr:eq(0) img"),
+        lenIMG = IMGElements.length;
 
     if(lenIMG > 0){
-        let imgLoaded = 0;
-
-        $(nextEl).find("img").on('load', function() {
-            imgLoaded++;
-            if(imgLoaded === lenIMG){
-                ShowIHide({button:button,elem:elem});
-            }
-        })
-            .on('error', function() {
-            imgLoaded++;
-            if(imgLoaded === lenIMG){
-                ShowIHide({button:button,elem:elem});
-            }
-        })
-            .each(function(i,val) {
-            if($(val).complete) {
-                $(val).load();
-            } else if($(val).error) {
-                $(val).error();
-            }
-        });
-    } else {
-        ShowIHide({button:button,elem:elem});
+        for(let izobr of IMGElements){
+            $(izobr).on('error', function(){
+                let src = $(this).attr("src");
+                $(this).attr({
+                    "title": "Изображение не найдено:\n"+src,
+                    "src": no_image
+                }).css({"cursor":"pointer", "width": "10%"});
+                $(this).click(function(){window.open(src);});
+            });
+        }
     }
+    //
+
+    let nextEl = $(elem).next().children(0);
+        $(nextEl).html(content);
 
 }
 
@@ -218,6 +207,7 @@ function ajaxJQ(param){
 
             let ObjData = {data:data,button:button,elem:elem};
             modifyData(ObjData);
+            ShowIHide(ObjData);
         }
     });
 }
