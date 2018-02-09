@@ -82,7 +82,7 @@ function ShowIHide(param){
                 let textPop = $(elem).children(1).children()[3].innerText,
 
                     imgSmall =  $(elem).next().find("img").filter(function(i,val){
-                        if(val.width > 200 && !/banner/i.test(this.src)){
+                        if(val.width > 150 && $(val).attr("error_image") !== "1" && !/banner/i.test(this.src)){
                             return this;
                         }
                     });
@@ -188,7 +188,8 @@ function modifyData(param){
             let src = $(this).attr("src");
             $(this).attr({
                 "title": "Изображение не найдено:\n"+src,
-                "src": no_image
+                "src": no_image,
+                "error_image": 1
             }).css({"cursor":"pointer", "width": "10%"});
             $(this).click(function(){window.open(src);});
 
