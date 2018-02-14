@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.4
+// @version      1.2.5
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -47,6 +47,9 @@ div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc2
 div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}\
 div.seeEl div img {box-shadow: 2px 2px 5px black;}\
 \
+.loading_tor_box{padding: 5px;}\
+.loading_tor {width: 100%;background: #e0dcdc;border-radius: 8px;}\
+.loading_tor_text{height: inherit;width: 0%;background: linear-gradient(#1dff60, #00b327);border-radius: 8px;color: #676767;font-size: 1em;padding: 2px;}\
 ");
 
 (function() {
@@ -59,7 +62,7 @@ function ShowIHide(param){
     let elem = param.elem,
         button = param.button;
 
-    $(elem).next().animate(
+    $(elem).next(".my_tr").animate(
         {
             width: [ "toggle", "swing" ],
             height: [ "toggle", "swing" ],
@@ -170,33 +173,49 @@ function modifyData(param){
 
     content.id = "my_content";
 
+
+    let nextEl = $(elem).next().children(0);
+
+    $(nextEl).html(content);
+
     //Images
     let IMGElements = $(content).find("table#details tr:eq(0) img"),
-        lenIMG = IMGElements.length;
+        lenIMG = IMGElements.length,
+
+        progressBar = $(elem).nextAll(":eq(1)"),
+        progressBarText = progressBar.find(".loading_tor_text"),
+        procentuno = 100/lenIMG;
 
         if(lenIMG > 0){
 
-        let imgLoaded = 0;
+        let imgLoaded = 0,
+            procentLoaded = 0;
 
-        $(IMGElements).on('load', function() {
+            progressBar.show();
+
+        $(IMGElements).one('load', function() {
             imgLoaded++;
+
+            procentLoaded += procentuno;
+            progressBarText.css("width", procentLoaded+"%");
+            progressBarText.text("Загружено "+procentLoaded.toFixed(1)+"%");
+
             if(imgLoaded === lenIMG){
+                progressBarText.text("100.0%");
+                progressBarText.css("width", "100%");
                 ShowIHide({button:button,elem:elem});
+                progressBar.fadeOut('slow');
             }
         })
-            .on('error', function() {
-            imgLoaded++;
+            .one('error', function() {
             let src = $(this).attr("src");
+
             $(this).attr({
                 "title": "Изображение не найдено:\n"+src,
                 "src": no_image,
                 "error_image": 1
             }).css({"cursor":"pointer", "width": "10%"});
             $(this).click(function(){window.open(src);});
-
-            if(imgLoaded === lenIMG){
-                ShowIHide({button:button,elem:elem});
-            }
         })
             .each(function(i,val) {
             if($(this).complete) {
@@ -209,11 +228,6 @@ function modifyData(param){
         ShowIHide({button:button,elem:elem});
     }
     // Images end
-
-    let nextEl = $(elem).next().children(0);
-
-        $(nextEl).html(content);
-
 }
 
 // Ajax запрос
@@ -288,6 +302,11 @@ function addPoleInfo(){
             $(img).click(function() {
                 if(!$(elem).next().is(".my_tr")){
                     $(elem).after('<tr class="my_tr"><td colspan="6"></td></tr>');
+                    $(elem).next(".my_tr").after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
+                                                 '<div class="loading_tor_box">'+
+                                                 '<div class="loading_tor"><div class="loading_tor_text"></div></div>'+
+                                                 '</div>'+
+                                                 '</td></tr>');
 
                     ajaxJQ({button : img , link: link, elem : elem});
                 } else {
