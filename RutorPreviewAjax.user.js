@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.5
+// @version      1.2.6
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -50,22 +50,34 @@ div.seeEl div img {box-shadow: 2px 2px 5px black;}\
 .loading_tor_box{padding: 5px;}\
 .loading_tor {width: 100%;background: #e0dcdc;border-radius: 8px;}\
 .loading_tor_text{height: inherit;width: 0%;background: linear-gradient(#1dff60, #00b327);border-radius: 8px;color: #676767;font-size: 1em;padding: 2px;}\
+\
+.checkbox_Load:not(checked) {opacity: 0;}\
+.checkbox_Load + label {cursor: pointer;position: absolute;left: 70%;}\
+.checkbox_Load:checked + label:before {background: #53d64c;}\
+.checkbox_Load:checked + label:after {left: 5px;content: 'ON';color: green;}\
+.checkbox_Load:not(checked) + label:before {content: '';position: absolute;top: 2px;left: -28px;width: 60px;height: 20px;background: #ff6060;box-shadow: inset 0 2px 3px rgba(0,0,0,.2);}\
+.checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}\
+div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}\
+.preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}\
 ");
 
 (function() {
     'use strict';
     const image_arrow = "data:image/gif;base64,R0lGODlhGAAYAOZVAP38/P7+/Pf4++/1+vz7+/L2+rPZ9vv6+2qu3M/m+fT2+rva7mCo2GWr2Vul1fb3+nCx3V+n11mk1IS/6V6m1sTf8Pb3+5TJ8Gqu3dzs9rrc95/Q9ZjM8/L4/PP3+l6m1abT9r/c76TN6KzS66jQ6rTa9pnH5pbK8WSq2IvD7Lra7qTS9orD7KXT9q3S653J55zJ55rN9PP4/N7t91qj1KvR62yv3bTW7Gar2YbB6vn5+8Hd8M/l81ij0ojC61ij1GCn1p3K56rQ6qvR6s3k867T61ul1JHI8L3b74bA65HH7/T2+7DU66LM6I/G7pjG5fD1+rDX9v38+2uu2vH1+v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAFUALAAAAAAYABgAAAfBgFWCg4SFhoeIiYqLjI2Oj4sLC5CFMA0oQZSCLxEaJUZNlCIMIAEBLRQkjyMSKwAKCgAbPUWNTAwxAAVUVAUAHBE3iyo/F7q8vB4ARzRIiTsOJwcCyMgCBEoOFYchFBMEAgPVvAM6BBNA24REEiwHD+PVAw8HOR88gxkNPksWUP8AA/4TYCEJjhmChGBIEECKw4cQIQZIgKCGoCEInBgwEKWjx48dOaaw4UKQjCcQpqhcybLlFAgmOmiaSbOmzZqBAAA7",
-          no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png";
+          no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
+
+          debug = 1;
 
 
 function LoadingImages(param){
+    try{
     //Images
     let callback = param.func,
         content = param.content,
         button = param.button,
         elem = param.elem,
 
-        IMGElements = $(content).find("table#details tr:eq(0) img"),
+        IMGElements = $(content).find('#details tr:eq(0) img:not([src^="http://rublacklist.net"])'),
         lenIMG = IMGElements.length,
 
 
@@ -74,6 +86,7 @@ function LoadingImages(param){
         procentuno = 100/lenIMG;
 
         if(lenIMG > 0){
+            if(debug) console.log(`Изображений найдено: ${lenIMG}\n------------------------------`);
 
         let imgLoaded = 0,
             procentLoaded = 0;
@@ -82,6 +95,8 @@ function LoadingImages(param){
 
         $(IMGElements).one('load', function() {
             imgLoaded++;
+
+            if(debug) console.log("Изображений загруженно: ",imgLoaded);
 
             procentLoaded += procentuno;
             progressBarText.css("width", procentLoaded+"%");
@@ -95,6 +110,7 @@ function LoadingImages(param){
             }
         })
             .one('error', function() {
+            if(debug) console.log("Не загруженно");
             let src = $(this).attr("src");
 
             $(this).attr({
@@ -104,7 +120,8 @@ function LoadingImages(param){
             }).css({"cursor":"pointer"});
             $(this).click(function(){window.open(src);});
         })
-            .each(function(i,val) {
+           .each(function(i,val) {
+
             if($(this).complete) {
                 $(this).load();
             } else if($(this).error) {
@@ -112,9 +129,13 @@ function LoadingImages(param){
             }
         });
     } else {
+        if(debug) console.log("Изображений в раздаче не найдено!");
         callback(param);
     }
     // Images end
+    } catch(e){
+        console.log(e);
+    }
 }
 
 // Правим полученный контент
@@ -171,7 +192,59 @@ function modifyData(param){
 
     $(nextEl).html(content);
 
-    LoadingImages({content:content, button:button, elem:elem, func: ShowIHide});
+    if(debug) console.log("Предзагрузка включена...",$(".checkbox_Load")[0].checked);
+
+   if($(".checkbox_Load")[0].checked){
+       LoadingImages({content:content, button:button, elem:elem, func: ShowIHide});
+   } else {
+       ShowIHide({button:button, elem:elem});
+   }
+}
+
+function MiniPanel(param){
+    let button = param.button,
+        elem = param.elem;
+
+    // Add see
+    $(".mDiv_title.opens").show();
+    let textPop = $(elem).children(1).children()[3].innerText,
+
+        imgSmall =  $(elem).nextAll(".my_tr:eq(0)").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
+            if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
+                return this;
+            }
+        });
+
+    if(imgSmall.length>0){
+        let elOut = imgSmall[0];
+        for(let i of imgSmall){
+            if(i.height > elOut.height) {
+                elOut = i;
+            }
+        }
+        imgSmall = elOut.src;
+    } else {
+        imgSmall = no_image ;
+    }
+
+    if(debug) console.log("Мини изображение: ",imgSmall);
+
+    let imgEl = $('<img>').attr({
+        src: imgSmall,
+        width: "50px"
+    }),
+
+        imgBox = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"></div>').append(imgEl),
+        textBox = $('<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;"></div>').text(textPop),
+
+        elSee = $('<div class="seeEl"></div>').attr('title',textPop).append(imgBox, textBox).click(function(){
+            let offset = $(elem).offset().top;
+            $('html, body').animate({scrollTop:offset}, 500, 'swing');
+        });
+
+    $(elem).data(elSee);
+
+    $(".mDiv_inner").append(elSee).animate({scrollTop:$("div.mDiv_inner").offset().top}, 500, 'swing');
 }
 
 // Функция появления и прочее
@@ -197,45 +270,9 @@ function ShowIHide(param){
             } else {
                 button.css("transform", "scaleY(-1)").attr("title","Скрыть раздачу");
 
-                // Add see
-                $(".mDiv_title.opens").show();
-                let textPop = $(elem).children(1).children()[3].innerText,
-
-                    imgSmall =  $(this).find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
-                        if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
-                            return this;
-                        }
-                    });
-
-                if(imgSmall.length>1){
-                    let elOut = imgSmall[0];
-                    for(let i of imgSmall){
-                        if(i.height > elOut.height) {
-                            elOut = i;
-                        }
-                    }
-                    imgSmall = elOut.src;
-                } else  {
-                    imgSmall = imgSmall.length === 0 ? no_image : imgSmall[0].src;
-                }
-
-                let imgEl = $('<img>').attr({
-                        src: imgSmall,
-                        width: "50px"
-                    }),
-
-                    imgBox = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"></div>').append(imgEl),
-                    textBox = $('<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;"></div>').text(textPop),
-
-                    elSee = $('<div class="seeEl"></div>').attr('title',textPop).append(imgBox, textBox).click(function(){
-                        let offset = $(elem).offset().top;
-                        $('html, body').animate({scrollTop:offset}, 500, 'swing');
-                    });
-
-                $(elem).data(elSee);
-
-                $(".mDiv_inner").append(elSee).animate({scrollTop:$("div.mDiv_inner").offset().top}, 500, 'swing');
-
+                // Mini Panel
+                //LoadingImages({content:$(elem).next().next().children(0), button:button, elem:elem, func: MiniPanel});
+                MiniPanel(param);
             }
 
             $(".mDiv_title.opens").text('Открытые '+'('+$(".seeEl").length+')');
@@ -257,6 +294,8 @@ function ajaxJQ(param){
         url: link,
         success: function(data){
 
+            if(debug) console.log("Ajax запрос завершен!");
+
             let ObjData = {data:data,button:button,elem:elem};
             modifyData(ObjData);
         }
@@ -267,6 +306,11 @@ function makePanel(){
     var div = $('<div class="mDiv">'+
                 '<div class="mDiv_title">Настройки</div>'+
                 '<div id="hideAll">Свернуть все</div>'+
+                '<div id="preLoadImages" class="imgages_Load">'+
+                '<div class="preLoadImagesCell">Предзагрузка: </div>'+
+                '<div class="preLoadImagesCell"><input type="checkbox" class="checkbox_Load" id="checkbox_imgages_Load">'+
+                '<label for="checkbox_imgages_Load"></label></div>'+
+                '</div>'+
                 '<div class="mDiv_title opens">Открытые</div>'+
                 '<div class="mDiv_inner"></div>'+
                 '</div>');
@@ -322,7 +366,6 @@ function addPoleInfo(){
                                                  '</div>'+
                                                  '</td></tr>');
                     $(elem).next('.tr_loading').after('<tr class="my_tr"><td colspan="6"></td></tr>');
-
 
                     ajaxJQ({button : img , link: link, elem : elem});
                 } else {
