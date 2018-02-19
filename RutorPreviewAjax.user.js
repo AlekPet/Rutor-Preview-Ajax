@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.6
+// @version      1.2.7
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -45,7 +45,11 @@ div#hideAll:hover{background: linear-gradient(#2fc12f,#246318);}\
 \
 div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}\
 div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}\
-div.seeEl div img {box-shadow: 2px 2px 5px black;}\
+div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}\
+.minipanel{display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted white;background: linear-gradient(#df99e8,#ff6400);}\
+.minipanel:hover {background: linear-gradient(#d377de,#ff7000);}\
+.minipanel:hover img{transition:1s all;transform: rotateX(360deg) !important;}\
+.minipanel img{transition:1s all;}\
 \
 .loading_tor_box{padding: 5px;}\
 .loading_tor {width: 100%;background: #e0dcdc;border-radius: 8px;}\
@@ -68,6 +72,130 @@ div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospac
 
           debug = 0;
 
+    var ObjSave = null;
+
+function loadStorage(){
+    let ObjSave_tmp = GM_getValue('ObjSave');
+
+    ObjSave = (ObjSave_tmp) ? JSON.parse(GM_getValue('ObjSave')) : {
+        options: {}
+    };
+
+    if (!ObjSave.hasOwnProperty('options')){
+        ObjSave.options = {};
+    }
+    if(debug) console.log("Объект: ",ObjSave);
+}
+
+function saveToStorage(){
+    try{
+        var save_data = JSON.stringify(ObjSave);
+
+        if(save_data.length>0 && save_data !== null && save_data !=="" && save_data !== undefined){
+            GM_setValue('ObjSave', save_data);
+            if(debug) console.log("Сохраненно: ",ObjSave);
+        }
+    }catch(e){
+        console.log(e);
+    }
+}
+
+function updateForm(){}
+
+function LoadingImages_v2(param){
+        try{
+    //Images
+    let callback = param.func,
+        content = param.content,
+        button = param.button,
+        elem = param.elem,
+        IMGElements = $(content).find('#details tr:eq(0) img:not([src^="http://rublacklist.net"])'),
+        lenIMG = IMGElements.length,
+
+
+        progressBar = $(elem).nextAll(":eq(0)"),
+        progressBarText = progressBar.find(".loading_tor_text"),
+        procentuno = 100/lenIMG;
+
+        if(lenIMG > 0){
+            if(debug) console.log(`Изображений найдено: ${lenIMG}\n------------------------------`);
+
+        let imgLoaded = 0,
+            procentLoaded = 0;
+
+            progressBar.show();
+
+            $(IMGElements).each(function(){
+                let image = this,
+                    timer = null;
+
+                $(image).one("load", function(){
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = null;
+                    }
+
+                    imgLoaded++;
+
+                    if(debug) console.log("Изображений загруженно: ",imgLoaded);
+
+                    procentLoaded += procentuno;
+                    progressBarText.css("width", procentLoaded+"%");
+                    progressBarText.text("Загружено "+procentLoaded.toFixed(1)+"%");
+
+                    if(imgLoaded === lenIMG){
+                        progressBarText.text("100.0%");
+                        progressBarText.css("width", "100%");
+                        callback(param);
+                        progressBar.fadeOut('slow');
+                    }
+                })
+                    .one('error', function() {
+                    let src = $(this).attr("src");
+
+                    $(this).attr({
+                        "title": "Изображение не найдено:\n"+src,
+                        "src": no_image,
+                        "error_image": 1
+                    }).css({"cursor":"pointer"});
+                    $(this).click(function(){window.open(src);});
+                })
+                    .attr("src",image.src);
+
+                timer = setTimeout(function(theImg) {
+                    return function() {
+                        if(debug) console.log(`Таймер истек: ${theImg.src}\n------------------------------`);
+
+                        theImg.onload = theImg.onabort = theImg.onerror = function() {};
+
+                        if (timer) {
+                            clearTimeout(timer);
+                            timer = null;
+                        }
+
+                        let src = $(theImg).attr("src");
+
+                        $(theImg).attr({
+                            "title": "Изображение не найдено:\n"+src,
+                            "src": no_image,
+                            "error_image": 1
+                        }).css({"cursor":"pointer"}).click(function(){window.open(src);});
+
+                    if(imgLoaded === lenIMG){
+                        progressBarText.text("100.0%");
+                        progressBarText.css("width", "100%");
+                        callback(param);
+                        progressBar.fadeOut('slow');
+                    }
+                        };
+                }(image),5000);
+
+            });
+        }
+        } catch(e){
+            console.log(e);
+        }
+}
 
 function LoadingImages(param){
     try{
@@ -195,7 +323,7 @@ function modifyData(param){
     if(debug) console.log("Предзагрузка включена...",$(".checkbox_Load")[0].checked);
 
    if($(".checkbox_Load")[0].checked){
-       LoadingImages({content:content, button:button, elem:elem, func: ShowIHide});
+       LoadingImages_v2({content:content, button:button, elem:elem, func: ShowIHide});
    } else {
        ShowIHide({button:button, elem:elem});
    }
@@ -236,8 +364,19 @@ function MiniPanel(param){
 
         imgBox = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"></div>').append(imgEl),
         textBox = $('<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;"></div>').text(textPop),
+        hide = button.clone(true),
+        hideE = $._data(hide[0], "events"),
+        addonBox = $('<div class="minipanel"></div>').attr('title',hide.attr('title')).each(function () {
+        for (var type in hideE)
+        for (var handler in hideE[type]){
+            if(handler === 'delegateCount') continue;
+            $.event.add(this, type, hideE[type][handler], hideE[type].data);
+        }
+    }).append(hide.off()),
 
-        elSee = $('<div class="seeEl"></div>').attr('title',textPop).append(imgBox, textBox).click(function(){
+        elSee = $('<div class="seeEl"></div>').attr('title',textPop).append(imgBox, textBox,addonBox);
+
+    $(imgBox).add(textBox).click(function(){
             let offset = $(elem).offset().top;
             $('html, body').animate({scrollTop:offset}, 500, 'swing');
         });
@@ -250,7 +389,8 @@ function MiniPanel(param){
 // Функция появления и прочее
 function ShowIHide(param){
     let elem = param.elem,
-        button = param.button;
+        button = param.button,
+        event_el = param.event_el || null;
 
     $(elem).nextAll(".my_tr:eq(0)").animate(
         {
@@ -278,13 +418,13 @@ function ShowIHide(param){
             $(".mDiv_title.opens").text('Открытые '+'('+$(".seeEl").length+')');
 
             // Back offset on page
-            $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
+            if(event_el !== "minipanel") $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
         });
 }
 
 // Ajax запрос
 function ajaxJQ(param){
-    console.log("Ajax proceed...");
+    if(debug) console.log("Ajax proceed...");
 
     let button = param.button,
         link = param.link,
@@ -313,7 +453,22 @@ function makePanel(){
                 '</div>'+
                 '<div class="mDiv_title opens">Открытые</div>'+
                 '<div class="mDiv_inner"></div>'+
-                '</div>');
+                '</div>'),
+
+        chechVal = "";
+    if (ObjSave.hasOwnProperty('options')){
+        if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
+    }
+
+    $(div).find("#checkbox_imgages_Load").on('change', function(){
+        if(debug) console.log("Предзагрузка: ",$(this)[0].checked);
+
+        if (ObjSave.hasOwnProperty('options')){
+            if (!ObjSave.options.hasOwnProperty('preload')) ObjSave.options.preload = "";
+            ObjSave.options.preload = $(this)[0].checked;
+            saveToStorage();
+        }
+    }).attr("checked",chechVal);
 
     $("#sidebar").append(div);
         
@@ -358,7 +513,7 @@ function addPoleInfo(){
                 newI = $('<td style="text-align:center;"></td>').html(img);
 
             // Image event
-            $(img).click(function() {
+            $(img).click(function(e) {
                 if(!$(elem).next().is(".tr_loading")){
                     $(elem).after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
                                                  '<div class="loading_tor_box">'+
@@ -369,7 +524,7 @@ function addPoleInfo(){
 
                     ajaxJQ({button : img , link: link, elem : elem});
                 } else {
-                    ShowIHide({elem:elem, button: img});
+                    ShowIHide({elem:elem, button: img, event_el: e.currentTarget.className});
                 }
             });
 
@@ -379,6 +534,7 @@ function addPoleInfo(){
 }
 
 function init(){
+    loadStorage();
     makePanel();
     addPoleInfo();
 }
