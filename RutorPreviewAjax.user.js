@@ -102,7 +102,7 @@ function saveToStorage(){
 
 function updateForm(){}
 
-function LoadingImages_v2(param){
+function LoadingImages(param){
         try{
     //Images
     let callback = param.func,
@@ -197,75 +197,6 @@ function LoadingImages_v2(param){
         }
 }
 
-function LoadingImages(param){
-    try{
-    //Images
-    let callback = param.func,
-        content = param.content,
-        button = param.button,
-        elem = param.elem,
-
-        IMGElements = $(content).find('#details tr:eq(0) img:not([src^="http://rublacklist.net"])'),
-        lenIMG = IMGElements.length,
-
-
-        progressBar = $(elem).nextAll(":eq(0)"),
-        progressBarText = progressBar.find(".loading_tor_text"),
-        procentuno = 100/lenIMG;
-
-        if(lenIMG > 0){
-            if(debug) console.log(`Изображений найдено: ${lenIMG}\n------------------------------`);
-
-        let imgLoaded = 0,
-            procentLoaded = 0;
-
-            progressBar.show();
-
-        $(IMGElements).one('load', function() {
-            imgLoaded++;
-
-            if(debug) console.log("Изображений загруженно: ",imgLoaded);
-
-            procentLoaded += procentuno;
-            progressBarText.css("width", procentLoaded+"%");
-            progressBarText.text("Загружено "+procentLoaded.toFixed(1)+"%");
-
-            if(imgLoaded === lenIMG){
-                progressBarText.text("100.0%");
-                progressBarText.css("width", "100%");
-                callback(param);
-                progressBar.fadeOut('slow');
-            }
-        })
-            .one('error', function() {
-            if(debug) console.log("Не загруженно");
-            let src = $(this).attr("src");
-
-            $(this).attr({
-                "title": "Изображение не найдено:\n"+src,
-                "src": no_image,
-                "error_image": 1
-            }).css({"cursor":"pointer"});
-            $(this).click(function(){window.open(src);});
-        })
-           .each(function(i,val) {
-
-            if($(this).complete) {
-                $(this).load();
-            } else if($(this).error) {
-                $(this).error();
-            }
-        });
-    } else {
-        if(debug) console.log("Изображений в раздаче не найдено!");
-        callback(param);
-    }
-    // Images end
-    } catch(e){
-        console.log(e);
-    }
-}
-
 // Правим полученный контент
 function modifyData(param){
     var data = param.data,
@@ -323,7 +254,7 @@ function modifyData(param){
     if(debug) console.log("Предзагрузка включена...",$(".checkbox_Load")[0].checked);
 
    if($(".checkbox_Load")[0].checked){
-       LoadingImages_v2({content:content, button:button, elem:elem, func: ShowIHide});
+       LoadingImages({content:content, button:button, elem:elem, func: ShowIHide});
    } else {
        ShowIHide({button:button, elem:elem});
    }
@@ -363,7 +294,7 @@ function MiniPanel(param){
     }),
 
         imgBox = $('<div style="display: table-cell;vertical-align: middle;padding:5px;border-right: 1px dotted white;"></div>').append(imgEl),
-        textBox = $('<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;"></div>').text(textPop),
+        textBox = $('<div style="display: table-cell;vertical-align: middle;font-size: unset;padding:2px;word-break: break-all;"></div>').text(textPop),
         hide = button.clone(true),
         hideE = $._data(hide[0], "events"),
         addonBox = $('<div class="minipanel"></div>').attr('title',hide.attr('title')).each(function () {
