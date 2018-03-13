@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.7
+// @version      1.2.8
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -9,6 +9,10 @@
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
+// @exclude     http://tor-ru.net/torrent/*
+// @exclude     http://rutor.info/torrent/*
+// @exclude     http://zerkalo-rutor.org/torrent/*
+// @exclude    http://rutor.is/torrent/*
 // @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -23,9 +27,11 @@
 GM_addStyle("\
 .mDiv{width: 250px;border: 3px double #FFA302;right: 9px;text-align: center;color:white;}\
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00;}\
-.mDiv_inner{overflow-y: scroll;max-height: 400px;}\
+.mDiv_inner{overflow-y: auto;max-height: 400px;}\
+.mDiv_FavInner{overflow-y: auto;max-height: 350px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}\
 \
 .mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}\
+.mDiv_title.fav{filter:  hue-rotate(200deg);}\
 \
 .com_Style{background: linear-gradient(#b7b7b7,#545454);color: white;text-align: center;padding: 4px;cursor: pointer;user-select: none; width: 300px;margin: 0 auto;border-radius: 8px;transition: all 0.5s ease;margin-bottom: 10px;}\
 .com_Style:hover {background: linear-gradient(#676666,#9e9e9e);width: 350px;transition: all 0.5s ease-out;font-size: 1.2em;}\
@@ -63,6 +69,16 @@ div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}\
 .checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}\
 div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}\
 .preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}\
+\
+tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}\
+tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img{transition:1s transform;}\
+tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:void(0);'] img:hover{transform: scale(1.3);transition:1s transform;filter: hue-rotate(270deg);}\
+.FavBlockEl{margin: 0 5px 10px 0;background: #fbf7f7;box-shadow: 2px 2px 5px silver;}\
+.FavBlockEl a {text-decoration: none;font-size: 0.8em;font-weight: bold;}\
+.FavBlockEl a:hover {color: #73046a !important;}\
+.FavBlockEl div:nth-child(2) div {margin: 5px 0 5px 0;}\
+.FavBlockEl div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}\
+.FavBlockEl div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
 ");
 
 (function() {
@@ -74,6 +90,21 @@ div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospac
 
     var ObjSave = null;
 
+function checkLocaltorage(){
+    if(ObjSave){
+        if (!ObjSave.hasOwnProperty('favorites')){
+            ObjSave.favorites = {
+            };
+        }
+
+        if (!ObjSave.hasOwnProperty('options')){
+            ObjSave.options = {};
+        }
+
+        if(debug) console.log("Объект: ",ObjSave);
+    }
+}
+
 function loadStorage(){
     let ObjSave_tmp = GM_getValue('ObjSave');
 
@@ -81,10 +112,7 @@ function loadStorage(){
         options: {}
     };
 
-    if (!ObjSave.hasOwnProperty('options')){
-        ObjSave.options = {};
-    }
-    if(debug) console.log("Объект: ",ObjSave);
+    checkLocaltorage();
 }
 
 function saveToStorage(){
@@ -99,8 +127,6 @@ function saveToStorage(){
         console.log(e);
     }
 }
-
-function updateForm(){}
 
 function LoadingImages(param){
         try{
@@ -266,7 +292,7 @@ function MiniPanel(param){
 
     // Add see
     $(".mDiv_title.opens").show();
-    let textPop = $(elem).children(1).children()[3].innerText,
+    let textPop = $(elem).children(1).children()[4].innerText,
 
         imgSmall =  $(elem).nextAll(".my_tr:eq(0)").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
             if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
@@ -373,6 +399,117 @@ function ajaxJQ(param){
     });
 }
 
+function MakeFav(param){
+let elem = param.el || null,
+    link = param.link,
+    linkText = param.linkText,
+    Down = param.Down,
+    Mdown = param.Mdown,
+
+    FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:link, target:"_blank",title:linkText}).text(linkText),
+    FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px;"></div>').append(FavElTitleA),
+    FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px;">'+
+                    '<div><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
+                    '<div><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
+                    '</div>'),
+    FavElBlockX = $('<div title="Удалить!"></div>').text("X").click(function(e){
+       let event_el = e.currentTarget,
+           el_block = event_el.parentElement;
+
+        if(debug) console.log($(".mDiv_FavInner .FavBlockEl").index(el_block));
+        removeFav({el:el_block, link:link});
+    }),
+    FavBlockEl = $('<div class="FavBlockEl"></div>').attr({favIndex:0}).append(FavElTitle,FavAddBlock,FavElBlockX);
+
+    if($(".mDiv_FavInner").children().length === 0) {
+        $(".mDiv_FavInner").empty();
+    }
+
+    $(".mDiv_FavInner").append(FavBlockEl);
+
+    $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
+}
+
+function addFav(param){
+let elem = param.el || null,
+    link = param.link,
+    linkText = param.linkText,
+    Down = param.Down,
+    Mdown = param.Mdown;
+
+    // Save local storage
+        if (!ObjSave.hasOwnProperty('favorites')){
+            ObjSave.favorites = {};
+        }
+
+        if(!checkPovtor(link)){
+            if(debug) console.log("Нет в базе избранного, сохраняю!");
+
+            ObjSave.favorites[encodeURI(link)] = {
+                el: null,
+                link: encodeURI(link),
+                linkText: escape(linkText),
+                Down: encodeURI(Down),
+                Mdown: encodeURI(Mdown)
+            };
+
+            saveToStorage();
+
+            MakeFav(param);
+        }
+}
+
+function removeFav(param){
+let el = param.el,
+    link = param.link;
+
+if(confirm("Удалить эту запись?")){
+    if (ObjSave.hasOwnProperty('favorites') && link !== "" && link !== undefined && link){
+        delete ObjSave.favorites[encodeURI(link)];
+        $(el).remove();
+        saveToStorage();
+        if(debug) console.log("Элемент удален из избранного!");
+        $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
+    }
+
+    if($(".mDiv_FavInner").children().length === 0) {
+        $(".mDiv_FavInner").text('Пусто...');
+    }
+}
+}
+
+function checkPovtor(link){
+    let povtor = false;
+
+    if (ObjSave.hasOwnProperty('favorites')){
+        if(Object.keys(ObjSave.favorites).length > 0){
+            if(ObjSave.favorites.hasOwnProperty(encodeURI(link))){
+                if(debug) console.log("Уже есть в базе избранного!");
+                povtor = true;
+            }
+        }
+    }
+
+    return povtor;
+}
+
+function updateFav(){
+    if (ObjSave.hasOwnProperty('favorites')){
+        if(Object.keys(ObjSave.favorites).length > 0){
+            for(let pFav in ObjSave.favorites){
+                let ObjFavCur = ObjSave.favorites[pFav];
+                MakeFav({
+                    el: null,
+                    link: decodeURI(ObjFavCur.link),
+                    linkText: unescape(ObjFavCur.linkText),
+                    Down: decodeURI(ObjFavCur.Down),
+                    Mdown: decodeURI(ObjFavCur.Mdown)
+                });
+            }
+        }
+    }
+}
+
 function makePanel(){
     var div = $('<div class="mDiv">'+
                 '<div class="mDiv_title">Настройки</div>'+
@@ -384,6 +521,8 @@ function makePanel(){
                 '</div>'+
                 '<div class="mDiv_title opens">Открытые</div>'+
                 '<div class="mDiv_inner"></div>'+
+                '<div class="mDiv_title fav">Избранное</div>'+
+                '<div class="mDiv_FavInner"></div>'+
                 '</div>'),
 
         chechVal = "";
@@ -402,6 +541,12 @@ function makePanel(){
     }).attr("checked",chechVal);
 
     $("#sidebar").append(div);
+
+    if($(".mDiv_FavInner").children().length > 0) {
+        $(".mDiv_FavInner").fadeIn('slow');
+    } else{
+        $(".mDiv_FavInner").text('Пусто...').fadeIn('slow');
+    }
         
     let maxTop = $(".sideblock:nth-child(2)").offset().top+parseFloat($(".sideblock:nth-child(2)").css("height"));
     $(window).scroll(function() {
@@ -420,6 +565,15 @@ function makePanel(){
 
         }
     });
+
+    // Ihim
+    div =  '<div style="border: 1px double;position: fixed;top: 0;left: 0;width: 1636px;height: 60px;background: white;display: table;">'+
+        '<div style="display: table-cell;vertical-align: middle;text-align: center;padding: 5px;width: 90%;">'+
+        '<div><input placeholder="Поиск..." style="    width: 100%;font-size: 2.5em;font-family: monospace;background: #ececec;outline-style: none;border: 0;color: #4C89C2;"></div></div>'+
+        '<div style="display: table-cell;vertical-align: middle;padding: 5px;text-align: center;width: 10%;">'+
+        '<div style="width: 90%;text-align: center;padding: 5px;height: 30px;line-height: 25px;font-size: 2em;margin: 0 auto;cursor: pointer;background: repeating-linear-gradient(-22deg, #ef1f1f 20px, #ab0000 40px);color: white;">Поиск</div></div>'+
+        '</div>';
+   // $("body").append(div);
 }
 
 function addPoleInfo(){
@@ -442,6 +596,16 @@ function addPoleInfo(){
                 img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
 
                 newI = $('<td style="text-align:center;"></td>').html(img);
+
+            $("<a href='javascript:void(0);'><img src='https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png' width='15' title='Add Favorite'></a>").insertBefore(m_elem.children[0]).click(function(){
+                addFav({
+                    el:this,
+                    link:link,
+                    linkText:linkText,
+                    Down:down,
+                    Mdown:magn
+                });
+            });
 
             // Image event
             $(img).click(function(e) {
@@ -468,6 +632,7 @@ function init(){
     loadStorage();
     makePanel();
     addPoleInfo();
+    updateFav();
 }
 
 init();
