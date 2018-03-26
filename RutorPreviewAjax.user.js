@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.8
+// @version      1.2.9
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -69,6 +69,8 @@ div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}\
 .checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}\
 div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}\
 .preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}\
+.preLoadImagesRow{display:table-row;}\
+.preLoadImagesRow #timoutTimeImages {width:50%;text-align: right;color: #00447f;font-family: monospace;font-weight: bold;}\
 \
 tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}\
 tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img{transition:1s transform;}\
@@ -83,18 +85,19 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
 (function() {
     'use strict';
-    const image_arrow = "data:image/gif;base64,R0lGODlhGAAYAOZVAP38/P7+/Pf4++/1+vz7+/L2+rPZ9vv6+2qu3M/m+fT2+rva7mCo2GWr2Vul1fb3+nCx3V+n11mk1IS/6V6m1sTf8Pb3+5TJ8Gqu3dzs9rrc95/Q9ZjM8/L4/PP3+l6m1abT9r/c76TN6KzS66jQ6rTa9pnH5pbK8WSq2IvD7Lra7qTS9orD7KXT9q3S653J55zJ55rN9PP4/N7t91qj1KvR62yv3bTW7Gar2YbB6vn5+8Hd8M/l81ij0ojC61ij1GCn1p3K56rQ6qvR6s3k867T61ul1JHI8L3b74bA65HH7/T2+7DU66LM6I/G7pjG5fD1+rDX9v38+2uu2vH1+v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAFUALAAAAAAYABgAAAfBgFWCg4SFhoeIiYqLjI2Oj4sLC5CFMA0oQZSCLxEaJUZNlCIMIAEBLRQkjyMSKwAKCgAbPUWNTAwxAAVUVAUAHBE3iyo/F7q8vB4ARzRIiTsOJwcCyMgCBEoOFYchFBMEAgPVvAM6BBNA24REEiwHD+PVAw8HOR88gxkNPksWUP8AA/4TYCEJjhmChGBIEECKw4cQIQZIgKCGoCEInBgwEKWjx48dOaaw4UKQjCcQpqhcybLlFAgmOmiaSbOmzZqBAAA7",
+    const image_arrow = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif",
           no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
+          favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
 
           debug = 0;
 
-    var ObjSave = null;
+    var ObjSave = null,
+        TimeOutImages = 5;
 
 function checkLocaltorage(){
     if(ObjSave){
         if (!ObjSave.hasOwnProperty('favorites')){
-            ObjSave.favorites = {
-            };
+            ObjSave.favorites = {};
         }
 
         if (!ObjSave.hasOwnProperty('options')){
@@ -144,7 +147,10 @@ function LoadingImages(param){
         procentuno = 100/lenIMG;
 
         if(lenIMG > 0){
-            if(debug) console.log(`Изображений найдено: ${lenIMG}\n------------------------------`);
+            if(debug){
+                console.log(`Изображений найдено: ${lenIMG}\n------------------------------`);
+                console.log("Тайм-аут равен: ", TimeOutImages, "Если 0 тайм-аут выкл.");
+            }
 
         let imgLoaded = 0,
             procentLoaded = 0;
@@ -188,34 +194,35 @@ function LoadingImages(param){
                 })
                     .attr("src",image.src);
 
-                timer = setTimeout(function(theImg) {
-                    return function() {
-                        if(debug) console.log(`Таймер истек: ${theImg.src}\n------------------------------`);
+                if(TimeOutImages !== 0){
+                    timer = setTimeout(function(theImg) {
+                        return function() {
+                            if(debug) console.log(`Таймер истек: ${theImg.src}\n------------------------------`);
 
-                        theImg.onload = theImg.onabort = theImg.onerror = function() {};
+                            theImg.onload = theImg.onabort = theImg.onerror = function() {};
 
-                        if (timer) {
-                            clearTimeout(timer);
-                            timer = null;
-                        }
+                            if (timer) {
+                                clearTimeout(timer);
+                                timer = null;
+                            }
 
-                        let src = $(theImg).attr("src");
+                            let src = $(theImg).attr("src");
 
-                        $(theImg).attr({
-                            "title": "Изображение не найдено:\n"+src,
-                            "src": no_image,
-                            "error_image": 1
-                        }).css({"cursor":"pointer"}).click(function(){window.open(src);});
+                            $(theImg).attr({
+                                "title": "Изображение не найдено:\n"+src,
+                                "src": no_image,
+                                "error_image": 1
+                            }).css({"cursor":"pointer"}).click(function(){window.open(src);});
 
-                    if(imgLoaded === lenIMG){
-                        progressBarText.text("100.0%");
-                        progressBarText.css("width", "100%");
-                        callback(param);
-                        progressBar.fadeOut('slow');
-                    }
+                            if(imgLoaded === lenIMG){
+                                progressBarText.text("100.0%");
+                                progressBarText.css("width", "100%");
+                                callback(param);
+                                progressBar.fadeOut('slow');
+                            }
                         };
-                }(image),5000);
-
+                    }(image), TimeOutImages*1000);
+                }
             });
         }
         } catch(e){
@@ -407,8 +414,8 @@ let elem = param.el || null,
     Mdown = param.Mdown,
 
     FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:link, target:"_blank",title:linkText}).text(linkText),
-    FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px;"></div>').append(FavElTitleA),
-    FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px;">'+
+    FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
+    FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                     '<div><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                     '<div><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
                     '</div>'),
@@ -465,11 +472,14 @@ let el = param.el,
 
 if(confirm("Удалить эту запись?")){
     if (ObjSave.hasOwnProperty('favorites') && link !== "" && link !== undefined && link){
-        delete ObjSave.favorites[encodeURI(link)];
-        $(el).remove();
-        saveToStorage();
-        if(debug) console.log("Элемент удален из избранного!");
-        $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
+
+        $(el).animate({"height":"0px","opacity": "0"},'slow', function(){
+            delete ObjSave.favorites[encodeURI(link)];
+            $(this).remove();
+            saveToStorage();
+            if(debug) console.log("Элемент удален из избранного!");
+            $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
+        });
     }
 
     if($(".mDiv_FavInner").children().length === 0) {
@@ -515,9 +525,14 @@ function makePanel(){
                 '<div class="mDiv_title">Настройки</div>'+
                 '<div id="hideAll">Свернуть все</div>'+
                 '<div id="preLoadImages" class="imgages_Load">'+
+                '<div class="preLoadImagesRow">'+
                 '<div class="preLoadImagesCell">Предзагрузка: </div>'+
-                '<div class="preLoadImagesCell"><input type="checkbox" class="checkbox_Load" id="checkbox_imgages_Load">'+
-                '<label for="checkbox_imgages_Load"></label></div>'+
+                '<div class="preLoadImagesCell"><input type="checkbox" class="checkbox_Load" id="checkbox_imgages_Load"><label for="checkbox_imgages_Load"></label></div>'+
+                '</div>'+
+                '<div class="preLoadImagesRow">'+
+                '<div class="preLoadImagesCell">Тайм-аут загр.</div>'+
+                '<div class="preLoadImagesCell"><input type="number" id="timoutTimeImages" title="Тайм-аут загрузки изображений.\nЕсли 0, то тайм-аут устанавл. настройкой браузера!" min="0" step="0.1"> сек.</div>'+
+                '</div>'+
                 '</div>'+
                 '<div class="mDiv_title opens">Открытые</div>'+
                 '<div class="mDiv_inner"></div>'+
@@ -540,6 +555,20 @@ function makePanel(){
         }
     }).attr("checked",chechVal);
 
+    $(div).find("#timoutTimeImages").on('change', function(){
+        let valueTO = $(this).val();
+
+        if(debug) console.log("Тайм-аут установлен в: ", valueTO+" сек.");
+
+        if(valueTO === "" || /^\s?$/.test(valueTO)) $(this).val(5);
+
+        if (ObjSave.hasOwnProperty('options')){
+            if (!ObjSave.options.hasOwnProperty('TimeOutLoadImages')) ObjSave.options.TimeOutLoadImages = 5;
+            TimeOutImages = ObjSave.options.TimeOutLoadImages = parseFloat($(this).val());
+            saveToStorage();
+        }
+    }).attr("value", (ObjSave.options.TimeOutLoadImages)?ObjSave.options.TimeOutLoadImages:5);
+
     $("#sidebar").append(div);
 
     if($(".mDiv_FavInner").children().length > 0) {
@@ -548,9 +577,14 @@ function makePanel(){
         $(".mDiv_FavInner").text('Пусто...').fadeIn('slow');
     }
         
-    let maxTop = $(".sideblock:nth-child(2)").offset().top+parseFloat($(".sideblock:nth-child(2)").css("height"));
+    let maxTop = $(".sideblock:nth-child(1)").offset().top+parseFloat($(".sideblock:nth-child(1)").css("height"))+parseFloat($(".sideblock:nth-child(2)").css("height"));
     $(window).scroll(function() {
-        if($(window).scrollTop() >= maxTop) $( ".mDiv" ).css({"position":"fixed", "top":"0px"}); else $( ".mDiv" ).css( "position","");
+        if($(window).scrollTop() >= maxTop){
+            $(".sideblock:eq(1)").css({"position":"fixed", "top":"0px","width":"250px"});
+            $(".mDiv").css({"position":"fixed", "top":"70px"});
+        } else {
+            $(".mDiv").add($(".sideblock:eq(1)")).removeAttr("style");
+        }
     });
 
     $("#hideAll").click(function(){
@@ -597,7 +631,7 @@ function addPoleInfo(){
 
                 newI = $('<td style="text-align:center;"></td>').html(img);
 
-            $("<a href='javascript:void(0);'><img src='https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png' width='15' title='Add Favorite'></a>").insertBefore(m_elem.children[0]).click(function(){
+            $("<a href='javascript:void(0);'><img src='"+favIcon+"' width='15' title='Add Favorite'></a>").insertBefore(m_elem.children[0]).click(function(){
                 addFav({
                     el:this,
                     link:link,
