@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.2.9
+// @version      1.3.0
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -27,8 +27,8 @@
 GM_addStyle("\
 .mDiv{width: 250px;border: 3px double #FFA302;right: 9px;text-align: center;color:white;}\
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00;}\
-.mDiv_inner{overflow-y: auto;max-height: 400px;}\
-.mDiv_FavInner{overflow-y: auto;max-height: 350px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}\
+.mDiv_inner{overflow-y: auto;max-height: 300px;}\
+.mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}\
 \
 .mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}\
 .mDiv_title.fav{filter:  hue-rotate(200deg);}\
@@ -81,6 +81,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .FavBlockEl div:nth-child(2) div {margin: 5px 0 5px 0;}\
 .FavBlockEl div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}\
 .FavBlockEl div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
+.poleLinks{display:block;transition: 1s transform;}\
+.poleLinks:hover{transform: scale(1.4);}\
 ");
 
 (function() {
@@ -88,6 +90,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
     const image_arrow = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif",
           no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
+          searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
 
           debug = 0;
 
@@ -416,8 +419,8 @@ let elem = param.el || null,
     FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:link, target:"_blank",title:linkText}).text(linkText),
     FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
     FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
-                    '<div><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
-                    '<div><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
+                    '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
+                    '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
                     '</div>'),
     FavElBlockX = $('<div title="Удалить!"></div>').text("X").click(function(e){
        let event_el = e.currentTarget,
@@ -426,7 +429,7 @@ let elem = param.el || null,
         if(debug) console.log($(".mDiv_FavInner .FavBlockEl").index(el_block));
         removeFav({el:el_block, link:link});
     }),
-    FavBlockEl = $('<div class="FavBlockEl"></div>').attr({favIndex:0}).append(FavElTitle,FavAddBlock,FavElBlockX);
+    FavBlockEl = $('<div class="FavBlockEl"></div>').append(FavElTitle,FavAddBlock,FavElBlockX);
 
     if($(".mDiv_FavInner").children().length === 0) {
         $(".mDiv_FavInner").empty();
@@ -631,7 +634,7 @@ function addPoleInfo(){
 
                 newI = $('<td style="text-align:center;"></td>').html(img);
 
-            $("<a href='javascript:void(0);'><img src='"+favIcon+"' width='15' title='Add Favorite'></a>").insertBefore(m_elem.children[0]).click(function(){
+            $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").insertBefore(m_elem.children[0]).click(function(){
                 addFav({
                     el:this,
                     link:link,
@@ -640,6 +643,13 @@ function addPoleInfo(){
                     Mdown:magn
                 });
             });
+
+            let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
+                let seatchText = linkText.match(/(.*)\[|\(/i)[1];
+                if(seatchText === null || seatchText === undefined) seatchText = linkText;
+                window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(seatchText);
+            });
+            $(m_elem).append(search);
 
             // Image event
             $(img).click(function(e) {
@@ -662,7 +672,14 @@ function addPoleInfo(){
     });
 }
 
+function AdBlock(){
+    if($(".sideblock2").length){
+        $(".sideblock2").remove();
+    }
+}
+
 function init(){
+    AdBlock();
     loadStorage();
     makePanel();
     addPoleInfo();
