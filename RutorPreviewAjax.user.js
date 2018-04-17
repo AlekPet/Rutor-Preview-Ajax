@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.0
+// @version      1.3.1
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -78,9 +78,9 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .FavBlockEl{margin: 0 5px 10px 0;background: #fbf7f7;box-shadow: 2px 2px 5px silver;}\
 .FavBlockEl a {text-decoration: none;font-size: 0.8em;font-weight: bold;}\
 .FavBlockEl a:hover {color: #73046a !important;}\
-.FavBlockEl div:nth-child(2) div {margin: 5px 0 5px 0;}\
-.FavBlockEl div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}\
-.FavBlockEl div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
+.FavBlockEl > div:nth-child(2) div {margin: 5px 0 5px 0;}\
+.FavBlockEl > div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}\
+.FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
 .poleLinks{display:block;transition: 1s transform;}\
 .poleLinks:hover{transform: scale(1.4);}\
 ");
@@ -421,6 +421,7 @@ let elem = param.el || null,
     FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                     '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                     '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
+                    '<div class="poleLinks"><a href="'+"http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText))+'" target="_blank" title="Искать: '+linkText+'"><img src="'+searchIcon+'" alt="Искать:'+linkText+'" width="13"></a></div>'+
                     '</div>'),
     FavElBlockX = $('<div title="Удалить!"></div>').text("X").click(function(e){
        let event_el = e.currentTarget,
@@ -613,6 +614,14 @@ function makePanel(){
    // $("body").append(div);
 }
 
+function searchEditReq(title){
+    let seatchText = title.match(/(.*)\[|\(/i)[1];
+
+    if(seatchText === null || seatchText === undefined) seatchText = title;
+
+    return seatchText;
+}
+
 function addPoleInfo(){
     // Ищим классы для получения данных
     $(".backgr, .gai, .tum").each(function(i, val){
@@ -645,9 +654,7 @@ function addPoleInfo(){
             });
 
             let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
-                let seatchText = linkText.match(/(.*)\[|\(/i)[1];
-                if(seatchText === null || seatchText === undefined) seatchText = linkText;
-                window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(seatchText);
+                window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
             });
             $(m_elem).append(search);
 
