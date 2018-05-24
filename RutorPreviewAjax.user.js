@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.1
+// @version      1.3.2
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -9,10 +9,12 @@
 // @match        http://zerkalo-rutor.org/*
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
+// @match        http://free-rutor.org/*
 // @exclude     http://tor-ru.net/torrent/*
 // @exclude     http://rutor.info/torrent/*
 // @exclude     http://zerkalo-rutor.org/torrent/*
 // @exclude    http://rutor.is/torrent/*
+// @exclude    http://free-rutor.org/torrent/*
 // @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -21,6 +23,7 @@
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_addStyle
+// @grant GM_addValueChangeListener
 // @require https://code.jquery.com/jquery-3.1.0.min.js
 
 // ==/UserScript==
@@ -83,6 +86,10 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
 .poleLinks{display:block;transition: 1s transform;}\
 .poleLinks:hover{transform: scale(1.4);}\
+.mDiv_Popup {position: absolute;width: 300px;background: #fbf7f7;top: 20%;left: -340%;border: 1px solid silver;box-shadow: 4px 4px 5px #c0c0c0a3;border-radius: 6px;display: none;}\
+.mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;}\
+.mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;display: table-cell;vertical-align: middle;}\
+.mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
 ");
 
 (function() {
@@ -96,6 +103,14 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
     var ObjSave = null,
         TimeOutImages = 5;
+
+GM_addValueChangeListener('ObjSave', function() {
+    let ls_value = GM_getValue('ObjSave');
+
+    ObjSave = (ls_value)?JSON.parse(ls_value):{};
+    updateFav();
+    updateForm();
+});
 
 function checkLocaltorage(){
     if(ObjSave){
@@ -467,6 +482,7 @@ let elem = param.el || null,
             saveToStorage();
 
             MakeFav(param);
+            showMessage('Избранное',`<p>Успешно добавлен в избранное!</p><p><b>${linkText}<b></p>`)
         }
 }
 
@@ -507,9 +523,22 @@ function checkPovtor(link){
     return povtor;
 }
 
+function updateForm(){
+    if (ObjSave.hasOwnProperty('options')){
+        let  chechVal = null, timoutTimeImages = 5;
+        if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
+
+        $("#checkbox_imgages_Load")[0].checked = chechVal;
+
+        timoutTimeImages = (ObjSave.options.hasOwnProperty('TimeOutLoadImages') && typeof(ObjSave.options.TimeOutLoadImages) == "number")?ObjSave.options.TimeOutLoadImages:5;
+        $("#timoutTimeImages").val(timoutTimeImages);
+    }
+}
+
 function updateFav(){
     if (ObjSave.hasOwnProperty('favorites')){
         if(Object.keys(ObjSave.favorites).length > 0){
+             $(".mDiv_FavInner").empty();
             for(let pFav in ObjSave.favorites){
                 let ObjFavCur = ObjSave.favorites[pFav];
                 MakeFav({
@@ -522,6 +551,16 @@ function updateFav(){
             }
         }
     }
+}
+
+function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 5000){
+$(".mDiv_Popup_message_box > .mDiv_Popup_message").html(message);
+$(".mDiv_Popup > .mDiv_Popup_title").text(title);
+
+$(".mDiv_Popup").fadeIn(anim_time_sec,function(){
+let anim = function (){$(this).fadeOut(anim_time_sec)}.bind(this);
+setTimeout(anim, time_delay_sec)
+})
 }
 
 function makePanel(){
@@ -542,6 +581,12 @@ function makePanel(){
                 '<div class="mDiv_inner"></div>'+
                 '<div class="mDiv_title fav">Избранное</div>'+
                 '<div class="mDiv_FavInner"></div>'+
+                '<div class="mDiv_Popup">'+
+                '<div class="mDiv_Popup_title"></div>'+
+                '<div class="mDiv_Popup_message_box">'+
+                '<div class="mDiv_Popup_message"></div>'+
+                '</div>'+
+                '</div>'+
                 '</div>'),
 
         chechVal = "";
@@ -571,7 +616,7 @@ function makePanel(){
             TimeOutImages = ObjSave.options.TimeOutLoadImages = parseFloat($(this).val());
             saveToStorage();
         }
-    }).attr("value", (ObjSave.options.TimeOutLoadImages)?ObjSave.options.TimeOutLoadImages:5);
+    }).val((ObjSave.options.TimeOutLoadImages)?ObjSave.options.TimeOutLoadImages:5);
 
     $("#sidebar").append(div);
 
