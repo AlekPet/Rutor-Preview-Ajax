@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.2
+// @version      1.3.3
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -10,11 +10,11 @@
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
 // @match        http://free-rutor.org/*
-// @exclude     http://tor-ru.net/torrent/*
-// @exclude     http://rutor.info/torrent/*
-// @exclude     http://zerkalo-rutor.org/torrent/*
-// @exclude    http://rutor.is/torrent/*
-// @exclude    http://free-rutor.org/torrent/*
+// @exclude      http://tor-ru.net/torrent/*
+// @exclude      http://rutor.info/torrent/*
+// @exclude      http://zerkalo-rutor.org/torrent/*
+// @exclude      http://rutor.is/torrent/*
+// @exclude      http://free-rutor.org/torrent/*
 // @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -86,10 +86,11 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
 .poleLinks{display:block;transition: 1s transform;}\
 .poleLinks:hover{transform: scale(1.4);}\
-.mDiv_Popup {position: absolute;width: 300px;background: #fbf7f7;top: 20%;left: -340%;border: 1px solid silver;box-shadow: 4px 4px 5px #c0c0c0a3;border-radius: 6px;display: none;}\
+.mDiv_Popup {position: fixed;background: #fbf7f7;width: 300px;top: 20%;left: 50%;margin-left: -150px;border: 1px solid silver;box-shadow: 4px 4px 8px #00000073;border-radius: 6px;display: none;z-index: 1;}\
 .mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;}\
-.mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;display: table-cell;vertical-align: middle;}\
+.mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}\
 .mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
+.mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;}\
 ");
 
 (function() {
@@ -428,6 +429,7 @@ function MakeFav(param){
 let elem = param.el || null,
     link = param.link,
     linkText = param.linkText,
+    id = param.id,
     Down = param.Down,
     Mdown = param.Mdown,
 
@@ -443,7 +445,7 @@ let elem = param.el || null,
            el_block = event_el.parentElement;
 
         if(debug) console.log($(".mDiv_FavInner .FavBlockEl").index(el_block));
-        removeFav({el:el_block, link:link});
+        removeFav({el:el_block, id:id});
     }),
     FavBlockEl = $('<div class="FavBlockEl"></div>').append(FavElTitle,FavAddBlock,FavElBlockX);
 
@@ -461,40 +463,53 @@ let elem = param.el || null,
     link = param.link,
     linkText = param.linkText,
     Down = param.Down,
-    Mdown = param.Mdown;
+    Mdown = param.Mdown,
 
-    // Save local storage
+    id = link;
+
+    try{
+        // Get id
+        id = id.match(/.*torrent\/(\d+)\//i)[1];
+        param.id = id;
+        if(!id) id = link;
+
+        if(debug) console.log("Ид равен: ", id);
+
+        // Save local storage
         if (!ObjSave.hasOwnProperty('favorites')){
             ObjSave.favorites = {};
         }
 
-        if(!checkPovtor(link)){
+        if(!checkPovtor({id:id,linkText:linkText})){
             if(debug) console.log("Нет в базе избранного, сохраняю!");
 
-            ObjSave.favorites[encodeURI(link)] = {
+            ObjSave.favorites[id] = {
                 el: null,
                 link: encodeURI(link),
                 linkText: escape(linkText),
+                id: id,
                 Down: encodeURI(Down),
                 Mdown: encodeURI(Mdown)
             };
 
             saveToStorage();
+            //MakeFav(param); -> GM_addValueChangeListener update auto
 
-            MakeFav(param);
             showMessage('Избранное',`<p>Успешно добавлен в избранное!</p><p><b>${linkText}<b></p>`)
         }
+    } catch (e){
+        console.log(e);
+    }
 }
 
 function removeFav(param){
 let el = param.el,
-    link = param.link;
+    id = param.id;
 
 if(confirm("Удалить эту запись?")){
-    if (ObjSave.hasOwnProperty('favorites') && link !== "" && link !== undefined && link){
-
+    if (ObjSave.hasOwnProperty('favorites') && id !== "" && id !== undefined && id){
         $(el).animate({"height":"0px","opacity": "0"},'slow', function(){
-            delete ObjSave.favorites[encodeURI(link)];
+            delete ObjSave.favorites[id];
             $(this).remove();
             saveToStorage();
             if(debug) console.log("Элемент удален из избранного!");
@@ -508,13 +523,16 @@ if(confirm("Удалить эту запись?")){
 }
 }
 
-function checkPovtor(link){
-    let povtor = false;
+function checkPovtor(params){
+    let povtor = false,
+        linkText = params.linkText,
+        id = params.id
 
     if (ObjSave.hasOwnProperty('favorites')){
         if(Object.keys(ObjSave.favorites).length > 0){
-            if(ObjSave.favorites.hasOwnProperty(encodeURI(link))){
+            if(ObjSave.favorites.hasOwnProperty(id)){
                 if(debug) console.log("Уже есть в базе избранного!");
+                showMessage('Внимание',`<p>Уже есть в базе избранного!</p><p><b>${linkText}<b></p>`)
                 povtor = true;
             }
         }
@@ -546,6 +564,7 @@ function updateFav(){
                     link: decodeURI(ObjFavCur.link),
                     linkText: unescape(ObjFavCur.linkText),
                     Down: decodeURI(ObjFavCur.Down),
+                    id: ObjFavCur.id,
                     Mdown: decodeURI(ObjFavCur.Mdown)
                 });
             }
@@ -553,14 +572,15 @@ function updateFav(){
     }
 }
 
-function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 5000){
-$(".mDiv_Popup_message_box > .mDiv_Popup_message").html(message);
-$(".mDiv_Popup > .mDiv_Popup_title").text(title);
+function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 3000){
+    $(".mDiv_Popup_message_box > .mDiv_Popup_message").html(message);
+    $(".mDiv_Popup > .mDiv_Popup_title").text(title);
+    $(".mDiv_Popup_smoke").fadeIn('anim_time_sec');
 
-$(".mDiv_Popup").fadeIn(anim_time_sec,function(){
-let anim = function (){$(this).fadeOut(anim_time_sec)}.bind(this);
-setTimeout(anim, time_delay_sec)
-})
+    $(".mDiv_Popup").fadeIn(anim_time_sec,function(){
+        let anim = function (){$(this).fadeOut(anim_time_sec);$(".mDiv_Popup_smoke").fadeOut(anim_time_sec)}.bind(this);
+        setTimeout(anim, time_delay_sec)
+    });
 }
 
 function makePanel(){
@@ -656,7 +676,7 @@ function makePanel(){
         '<div style="display: table-cell;vertical-align: middle;padding: 5px;text-align: center;width: 10%;">'+
         '<div style="width: 90%;text-align: center;padding: 5px;height: 30px;line-height: 25px;font-size: 2em;margin: 0 auto;cursor: pointer;background: repeating-linear-gradient(-22deg, #ef1f1f 20px, #ab0000 40px);color: white;">Поиск</div></div>'+
         '</div>';
-   // $("body").append(div);
+    $("body").append($('<div class="mDiv_Popup_smoke"></div>'));
 }
 
 function searchEditReq(title){
@@ -724,6 +744,33 @@ function addPoleInfo(){
     });
 }
 
+function remakeFav(){
+    if (ObjSave.hasOwnProperty('favorites')){
+        if(Object.keys(ObjSave.favorites).length > 0){
+            let incl = false
+            for(let x in ObjSave.favorites){
+                if(x.includes("http://")){
+                    if(debug) console.log("Ид содержит http!: ",ObjSave.favorites)
+                    incl = true;
+                    break;
+                }
+            }
+            if(incl){
+                for(let pFav in ObjSave.favorites){
+                    let pFavencodeURI = encodeURI(pFav),
+                        newId = unescape(pFav).match(/.*torrent\/(\d+)\//i)[1];
+
+                    ObjSave.favorites[newId] = ObjSave.favorites[pFavencodeURI];
+                    ObjSave.favorites[newId].id = newId;
+                    delete ObjSave.favorites[pFavencodeURI]
+                }
+                if(debug) console.log("Исправленме ид: ",ObjSave.favorites)
+                saveToStorage();
+            }
+        }
+    }
+}
+
 function AdBlock(){
     if($(".sideblock2").length){
         $(".sideblock2").remove();
@@ -735,6 +782,7 @@ function init(){
     loadStorage();
     makePanel();
     addPoleInfo();
+    remakeFav();
     updateFav();
 }
 
