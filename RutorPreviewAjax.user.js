@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.3
+// @version      1.3.4
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -86,8 +86,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
 .poleLinks{display:block;transition: 1s transform;}\
 .poleLinks:hover{transform: scale(1.4);}\
-.mDiv_Popup {position: fixed;background: #fbf7f7;width: 300px;top: 20%;left: 50%;margin-left: -150px;border: 1px solid silver;box-shadow: 4px 4px 8px #00000073;border-radius: 6px;display: none;z-index: 1;}\
-.mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;}\
+.mDiv_Popup {background: #fbf7f7;width: 300px;border: 1px solid silver;box-shadow: 4px 4px 8px #00000073;border-radius: 6px;margin: 10% auto;text-align: center; display:none;}\
+.mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;color:white;}\
 .mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}\
 .mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
 .mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;}\
@@ -483,6 +483,8 @@ let elem = param.el || null,
         if(!checkPovtor({id:id,linkText:linkText})){
             if(debug) console.log("Нет в базе избранного, сохраняю!");
 
+            fly.call(elem, ".mDiv_FavInner", 3, 3000)
+
             ObjSave.favorites[id] = {
                 el: null,
                 link: encodeURI(link),
@@ -575,11 +577,12 @@ function updateFav(){
 function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 3000){
     $(".mDiv_Popup_message_box > .mDiv_Popup_message").html(message);
     $(".mDiv_Popup > .mDiv_Popup_title").text(title);
-    $(".mDiv_Popup_smoke").fadeIn('anim_time_sec');
 
-    $(".mDiv_Popup").fadeIn(anim_time_sec,function(){
-        let anim = function (){$(this).fadeOut(anim_time_sec);$(".mDiv_Popup_smoke").fadeOut(anim_time_sec)}.bind(this);
-        setTimeout(anim, time_delay_sec)
+    $(".mDiv_Popup_smoke").fadeIn('anim_time_sec', function(){
+        $(".mDiv_Popup").fadeIn(anim_time_sec,function(){
+            let anim = function (){$(this).fadeOut(anim_time_sec, function(){$(".mDiv_Popup_smoke").fadeOut(anim_time_sec);});}.bind(this);
+            setTimeout(anim, time_delay_sec)
+        });
     });
 }
 
@@ -601,11 +604,6 @@ function makePanel(){
                 '<div class="mDiv_inner"></div>'+
                 '<div class="mDiv_title fav">Избранное</div>'+
                 '<div class="mDiv_FavInner"></div>'+
-                '<div class="mDiv_Popup">'+
-                '<div class="mDiv_Popup_title"></div>'+
-                '<div class="mDiv_Popup_message_box">'+
-                '<div class="mDiv_Popup_message"></div>'+
-                '</div>'+
                 '</div>'+
                 '</div>'),
 
@@ -676,7 +674,13 @@ function makePanel(){
         '<div style="display: table-cell;vertical-align: middle;padding: 5px;text-align: center;width: 10%;">'+
         '<div style="width: 90%;text-align: center;padding: 5px;height: 30px;line-height: 25px;font-size: 2em;margin: 0 auto;cursor: pointer;background: repeating-linear-gradient(-22deg, #ef1f1f 20px, #ab0000 40px);color: white;">Поиск</div></div>'+
         '</div>';
-    $("body").append($('<div class="mDiv_Popup_smoke"></div>'));
+    $("body").append($('<div class="mDiv_Popup_smoke">'+
+                       '<div class="mDiv_Popup">'+
+                       '<div class="mDiv_Popup_title"></div>'+
+                       '<div class="mDiv_Popup_message_box">'+
+                       '<div class="mDiv_Popup_message"></div>'+
+                       '</div>'+
+                       '</div>'));
 }
 
 function searchEditReq(title){
@@ -685,6 +689,38 @@ function searchEditReq(title){
     if(seatchText === null || seatchText === undefined) seatchText = title;
 
     return seatchText;
+}
+
+function fly(target, size, duration){
+    console.log(this)
+    let posLeft = $(target).offset().left,
+        posTop = $(target).offset().top-$(this).offset().top+200
+
+    $(this).
+    clone()
+        .css({
+        "position":"absolute",
+        "z-index":"9999999999",
+        "filter": "hue-rotate(270deg)",
+        "text-indent": "0px"
+    })
+        .appendTo(this)
+        .animate(
+        {
+            left:"+="+posLeft,
+            top:"+="+posTop,
+            textIndent: size
+        },
+        {
+            step: function( now, fx ) {
+                $(this).css("transform","scale("+now+")")
+            },
+            duration: duration,
+            complete: function(){
+                $(this).remove()
+            }
+        }
+    )
 }
 
 function addPoleInfo(){
@@ -787,5 +823,4 @@ function init(){
 }
 
 init();
-
 })();
