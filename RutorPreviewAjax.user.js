@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.4
+// @version      1.3.5
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -10,11 +10,6 @@
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
 // @match        http://free-rutor.org/*
-// @exclude      http://tor-ru.net/torrent/*
-// @exclude      http://rutor.info/torrent/*
-// @exclude      http://zerkalo-rutor.org/torrent/*
-// @exclude      http://rutor.is/torrent/*
-// @exclude      http://free-rutor.org/torrent/*
 // @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -76,8 +71,8 @@ div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospac
 .preLoadImagesRow #timoutTimeImages {width:50%;text-align: right;color: #00447f;font-family: monospace;font-weight: bold;}\
 \
 tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}\
-tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img{transition:1s transform;}\
-tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:void(0);'] img:hover{transform: scale(1.3);transition:1s transform;filter: hue-rotate(270deg);}\
+tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img, .box_buttons_inner a[href='javascript:void(0);'] img{transition:1s transform;}\
+tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:void(0);'] img:hover, .box_buttons_inner a[href='javascript:void(0);'] img:hover{transform: scale(1.3);filter: hue-rotate(270deg);}\
 .FavBlockEl{margin: 0 5px 10px 0;background: #fbf7f7;box-shadow: 2px 2px 5px silver;}\
 .FavBlockEl a {text-decoration: none;font-size: 0.8em;font-weight: bold;}\
 .FavBlockEl a:hover {color: #73046a !important;}\
@@ -91,6 +86,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}\
 .mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
 .mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;}\
+.box_buttons_inner {display: inline-block;margin-left: 20px;}\
 ");
 
 (function() {
@@ -586,9 +582,14 @@ function showMessage(title = "Сообщение", message, anim_time_sec = 1000
     });
 }
 
+function searchinHost(search){
+return location.href.includes(search);
+}
+
 function makePanel(){
-    var div = $('<div class="mDiv">'+
-                '<div class="mDiv_title">Настройки</div>'+
+    var hostisT = searchinHost("/torrent/"),
+        div = $('<div class="mDiv">'+
+                (!hostisT?'<div class="mDiv_title">Настройки</div>'+
                 '<div id="hideAll">Свернуть все</div>'+
                 '<div id="preLoadImages" class="imgages_Load">'+
                 '<div class="preLoadImagesRow">'+
@@ -599,7 +600,7 @@ function makePanel(){
                 '<div class="preLoadImagesCell">Тайм-аут загр.</div>'+
                 '<div class="preLoadImagesCell"><input type="number" id="timoutTimeImages" title="Тайм-аут загрузки изображений.\nЕсли 0, то тайм-аут устанавл. настройкой браузера!" min="0" step="0.1"> сек.</div>'+
                 '</div>'+
-                '</div>'+
+                '</div>':'')+
                 '<div class="mDiv_title opens">Открытые</div>'+
                 '<div class="mDiv_inner"></div>'+
                 '<div class="mDiv_title fav">Избранное</div>'+
@@ -667,13 +668,6 @@ function makePanel(){
         }
     });
 
-    // Ihim
-    div =  '<div style="border: 1px double;position: fixed;top: 0;left: 0;width: 1636px;height: 60px;background: white;display: table;">'+
-        '<div style="display: table-cell;vertical-align: middle;text-align: center;padding: 5px;width: 90%;">'+
-        '<div><input placeholder="Поиск..." style="    width: 100%;font-size: 2.5em;font-family: monospace;background: #ececec;outline-style: none;border: 0;color: #4C89C2;"></div></div>'+
-        '<div style="display: table-cell;vertical-align: middle;padding: 5px;text-align: center;width: 10%;">'+
-        '<div style="width: 90%;text-align: center;padding: 5px;height: 30px;line-height: 25px;font-size: 2em;margin: 0 auto;cursor: pointer;background: repeating-linear-gradient(-22deg, #ef1f1f 20px, #ab0000 40px);color: white;">Поиск</div></div>'+
-        '</div>';
     $("body").append($('<div class="mDiv_Popup_smoke">'+
                        '<div class="mDiv_Popup">'+
                        '<div class="mDiv_Popup_title"></div>'+
@@ -692,8 +686,7 @@ function searchEditReq(title){
 }
 
 function fly(target, size, duration){
-    console.log(this)
-    let posLeft = $(target).offset().left,
+    let posLeft = $(target).offset().left-$(this).offset().left,
         posTop = $(target).offset().top-$(this).offset().top+200
 
     $(this).
@@ -724,6 +717,7 @@ function fly(target, size, duration){
 }
 
 function addPoleInfo(){
+if(!searchinHost("/torrent/")){
     // Ищим классы для получения данных
     $(".backgr, .gai, .tum").each(function(i, val){
 
@@ -778,6 +772,28 @@ function addPoleInfo(){
             $(newI).prependTo(this);
         }
     });
+} else {
+        const poleDown = $("#download a"),
+              link = location.href,
+              linkText = $("#all > h1").text(),
+              Down = poleDown.eq(1).attr('href'),
+              Mdow = poleDown.eq(0).attr('href'),
+
+              box_buttons = $("<div class='box_buttons_inner'></div>").insertAfter(poleDown.eq(1));
+
+              $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
+            addFav({
+                el:this,
+                link:link,
+                linkText:linkText,
+                Down:Down,
+                Mdown:Mdow
+            });
+        }),
+            $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
+            window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
+        })
+}
 }
 
 function remakeFav(){
