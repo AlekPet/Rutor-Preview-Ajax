@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.5
+// @version      1.3.6
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -96,7 +96,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
           searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
 
-          debug = 0;
+          debug = 1;
 
     var ObjSave = null,
         TimeOutImages = 5;
@@ -112,7 +112,7 @@ GM_addValueChangeListener('ObjSave', function() {
 function checkLocaltorage(){
     if(ObjSave){
         if (!ObjSave.hasOwnProperty('favorites')){
-            ObjSave.favorites = {};
+            ObjSave.favorites = [];
         }
 
         if (!ObjSave.hasOwnProperty('options')){
@@ -390,7 +390,6 @@ function ShowIHide(param){
                 button.css("transform", "scaleY(-1)").attr("title","Скрыть раздачу");
 
                 // Mini Panel
-                //LoadingImages({content:$(elem).next().next().children(0), button:button, elem:elem, func: MiniPanel});
                 MiniPanel(param);
             }
 
@@ -428,6 +427,8 @@ let elem = param.el || null,
     id = param.id,
     Down = param.Down,
     Mdown = param.Mdown,
+    date_time = param.date_time,
+    index = param.index,
 
     FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:link, target:"_blank",title:linkText}).text(linkText),
     FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
@@ -441,7 +442,7 @@ let elem = param.el || null,
            el_block = event_el.parentElement;
 
         if(debug) console.log($(".mDiv_FavInner .FavBlockEl").index(el_block));
-        removeFav({el:el_block, id:id});
+        removeFav({el:el_block, id:id, linkText:linkText, index:$(".mDiv_FavInner .FavBlockEl").index(el_block)});
     }),
     FavBlockEl = $('<div class="FavBlockEl"></div>').append(FavElTitle,FavAddBlock,FavElBlockX);
 
@@ -460,6 +461,7 @@ let elem = param.el || null,
     linkText = param.linkText,
     Down = param.Down,
     Mdown = param.Mdown,
+    date_time = param.date_time,
 
     id = link;
 
@@ -473,7 +475,7 @@ let elem = param.el || null,
 
         // Save local storage
         if (!ObjSave.hasOwnProperty('favorites')){
-            ObjSave.favorites = {};
+            ObjSave.favorites = [];
         }
 
         if(!checkPovtor({id:id,linkText:linkText})){
@@ -481,14 +483,15 @@ let elem = param.el || null,
 
             fly.call(elem, ".mDiv_FavInner", 3, 3000)
 
-            ObjSave.favorites[id] = {
+            ObjSave.favorites.push({
                 el: null,
                 link: encodeURI(link),
                 linkText: escape(linkText),
                 id: id,
                 Down: encodeURI(Down),
-                Mdown: encodeURI(Mdown)
-            };
+                Mdown: encodeURI(Mdown),
+                date_time: date_time
+            });
 
             saveToStorage();
             //MakeFav(param); -> GM_addValueChangeListener update auto
@@ -502,12 +505,14 @@ let elem = param.el || null,
 
 function removeFav(param){
 let el = param.el,
-    id = param.id;
+    id = param.id,
+    linkText = param.linkText,
+    index = param.index;
 
-if(confirm("Удалить эту запись?")){
-    if (ObjSave.hasOwnProperty('favorites') && id !== "" && id !== undefined && id){
+if(confirm(`Вы действительно хотите удалить?\n"${linkText}"?`)){
+    if (ObjSave.hasOwnProperty('favorites') && index !== "" && index !== null && index !== undefined){
         $(el).animate({"height":"0px","opacity": "0"},'slow', function(){
-            delete ObjSave.favorites[id];
+            ObjSave.favorites.pop(index);
             $(this).remove();
             saveToStorage();
             if(debug) console.log("Элемент удален из избранного!");
@@ -527,11 +532,14 @@ function checkPovtor(params){
         id = params.id
 
     if (ObjSave.hasOwnProperty('favorites')){
-        if(Object.keys(ObjSave.favorites).length > 0){
-            if(ObjSave.favorites.hasOwnProperty(id)){
-                if(debug) console.log("Уже есть в базе избранного!");
-                showMessage('Внимание',`<p>Уже есть в базе избранного!</p><p><b>${linkText}<b></p>`)
-                povtor = true;
+        if(ObjSave.favorites.length > 0){
+            for(var i=0; i<ObjSave.favorites.length;i++){
+                let current = ObjSave.favorites[i]
+                if(current.id === id){
+                    if(debug) console.log("Уже есть в базе избранного!");
+                    showMessage('Внимание',`<p>Уже есть в базе избранного!</p><p><b>${linkText}<b></p>`)
+                    povtor = true;
+                }
             }
         }
     }
@@ -553,9 +561,9 @@ function updateForm(){
 
 function updateFav(){
     if (ObjSave.hasOwnProperty('favorites')){
-        if(Object.keys(ObjSave.favorites).length > 0){
+        if(ObjSave.favorites.length > 0){
              $(".mDiv_FavInner").empty();
-            for(let pFav in ObjSave.favorites){
+            for(let pFav = 0; pFav<ObjSave.favorites.length; pFav++){
                 let ObjFavCur = ObjSave.favorites[pFav];
                 MakeFav({
                     el: null,
@@ -563,7 +571,9 @@ function updateFav(){
                     linkText: unescape(ObjFavCur.linkText),
                     Down: decodeURI(ObjFavCur.Down),
                     id: ObjFavCur.id,
-                    Mdown: decodeURI(ObjFavCur.Mdown)
+                    Mdown: decodeURI(ObjFavCur.Mdown),
+                    date_time: ObjFavCur.date_time,
+                    index: pFav
                 });
             }
         }
@@ -717,62 +727,63 @@ function fly(target, size, duration){
 }
 
 function addPoleInfo(){
-if(!searchinHost("/torrent/")){
-    // Ищим классы для получения данных
-    $(".backgr, .gai, .tum").each(function(i, val){
+    if(!searchinHost("/torrent/")){
+        // Ищим классы для получения данных
+        $(".backgr, .gai, .tum").each(function(i, val){
 
-        // Если класс заголовка добавляем свой заголовок для кнопки
-        if(this.className == "backgr") {
-            $('<td width="1px">Спойлер</td>').prependTo(this);
-        } else {
-            // Если нет получаем информацию
-            let elem = this,
-                m_elem = this.children[1],
+            // Если класс заголовка добавляем свой заголовок для кнопки
+            if(this.className == "backgr") {
+                $('<td width="1px">Спойлер</td>').prependTo(this);
+            } else {
+                // Если нет получаем информацию
+                let elem = this,
+                    m_elem = this.children[1],
 
-                down = m_elem.children[0].href,
-                magn = m_elem.children[1].href,
-                link = m_elem.children[2].href,
-                linkText = m_elem.children[2].innerText,
+                    down = m_elem.children[0].href,
+                    magn = m_elem.children[1].href,
+                    link = m_elem.children[2].href,
+                    linkText = m_elem.children[2].innerText,
 
-                img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
+                    img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
 
-                newI = $('<td style="text-align:center;"></td>').html(img);
+                    newI = $('<td style="text-align:center;"></td>').html(img);
 
-            $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").insertBefore(m_elem.children[0]).click(function(){
-                addFav({
-                    el:this,
-                    link:link,
-                    linkText:linkText,
-                    Down:down,
-                    Mdown:magn
+                $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").insertBefore(m_elem.children[0]).click(function(){
+                    addFav({
+                        el:this,
+                        link:link,
+                        linkText:linkText,
+                        Down:down,
+                        Mdown:magn,
+                        date_time: new Date().getTime()
+                    });
                 });
-            });
 
-            let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
-                window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
-            });
-            $(m_elem).append(search);
+                let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
+                    window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
+                });
+                $(m_elem).append(search);
 
-            // Image event
-            $(img).click(function(e) {
-                if(!$(elem).next().is(".tr_loading")){
-                    $(elem).after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
-                                                 '<div class="loading_tor_box">'+
-                                                 '<div class="loading_tor"><div class="loading_tor_text"></div></div>'+
-                                                 '</div>'+
-                                                 '</td></tr>');
-                    $(elem).next('.tr_loading').after('<tr class="my_tr"><td colspan="6"></td></tr>');
+                // Image event
+                $(img).click(function(e) {
+                    if(!$(elem).next().is(".tr_loading")){
+                        $(elem).after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
+                                      '<div class="loading_tor_box">'+
+                                      '<div class="loading_tor"><div class="loading_tor_text"></div></div>'+
+                                      '</div>'+
+                                      '</td></tr>');
+                        $(elem).next('.tr_loading').after('<tr class="my_tr"><td colspan="6"></td></tr>');
 
-                    ajaxJQ({button : img , link: link, elem : elem});
-                } else {
-                    ShowIHide({elem:elem, button: img, event_el: e.currentTarget.className});
-                }
-            });
+                        ajaxJQ({button : img , link: link, elem : elem});
+                    } else {
+                        ShowIHide({elem:elem, button: img, event_el: e.currentTarget.className});
+                    }
+                });
 
-            $(newI).prependTo(this);
-        }
-    });
-} else {
+                $(newI).prependTo(this);
+            }
+        });
+    } else {
         const poleDown = $("#download a"),
               link = location.href,
               linkText = $("#all > h1").text(),
@@ -781,44 +792,56 @@ if(!searchinHost("/torrent/")){
 
               box_buttons = $("<div class='box_buttons_inner'></div>").insertAfter(poleDown.eq(1));
 
-              $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
+        $("<a href='javascript:void(0);' title='Добавить в избранное'><img src='"+favIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
             addFav({
                 el:this,
                 link:link,
                 linkText:linkText,
                 Down:Down,
-                Mdown:Mdow
+                Mdown:Mdow,
+                date_time: new Date().getTime()
             });
         }),
             $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
             window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
         })
-}
+    }
 }
 
 function remakeFav(){
     if (ObjSave.hasOwnProperty('favorites')){
-        if(Object.keys(ObjSave.favorites).length > 0){
-            let incl = false
-            for(let x in ObjSave.favorites){
-                if(x.includes("http://")){
-                    if(debug) console.log("Ид содержит http!: ",ObjSave.favorites)
-                    incl = true;
-                    break;
-                }
-            }
-            if(incl){
+        // Favorites object
+        let isEdit = !1;
+        if(Object.prototype.toString.call(ObjSave.favorites) == "[object Object]"){
+            if(Object.keys(ObjSave.favorites).length > 0){
                 for(let pFav in ObjSave.favorites){
-                    let pFavencodeURI = encodeURI(pFav),
-                        newId = unescape(pFav).match(/.*torrent\/(\d+)\//i)[1];
+                    // no date
+                    if(!ObjSave.favorites[pFav].hasOwnProperty("date_time")){
+                        ObjSave.favorites[pFav].date_time = new Date().getTime()
+                        if(debug) console.log("Нет Даты!: ", ObjSave.favorites[pFav])
+                    }
 
-                    ObjSave.favorites[newId] = ObjSave.favorites[pFavencodeURI];
-                    ObjSave.favorites[newId].id = newId;
-                    delete ObjSave.favorites[pFavencodeURI]
+                    // http
+                    if(pFav.includes("http://")){
+                        if(debug) console.log("Ид содержит http!: ", ObjSave.favorites[pFav])
+
+                        let pFavencodeURI = encodeURI(pFav),
+                            newId = unescape(pFav).match(/.*torrent\/(\d+)\//i)[1];
+
+                        ObjSave.favorites[newId] = ObjSave.favorites[pFavencodeURI];
+                        ObjSave.favorites[newId].id = newId;
+                        delete ObjSave.favorites[pFavencodeURI]
+                    }
+
                 }
-                if(debug) console.log("Исправленме ид: ",ObjSave.favorites)
-                saveToStorage();
+
             }
+            // Favorites convert to array
+            ObjSave.favorites = Object.keys(ObjSave.favorites).map((k,i) => ({...ObjSave.favorites[k]}))
+            isEdit = !0;
+
+            if(debug) console.log("Исправленме Ид и добавление Даты: ",ObjSave,"Были ли правки:",isEdit)
+            saveToStorage();
         }
     }
 }
