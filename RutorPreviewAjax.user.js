@@ -10,8 +10,8 @@
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
 // @match        http://free-rutor.org/*
-// @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
-// @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/blob/master/RutorPreviewAjax.user.js
+// @updateURL    https://github.com/AlekPet/Rutor-Preview-Ajax/raw/master/RutorPreviewAjax.user.js
+// @downloadURL  https://github.com/AlekPet/Rutor-Preview-Ajax/raw/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
 // @run-at document-end
 // @noframes
