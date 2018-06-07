@@ -96,7 +96,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
           searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
 
-          debug = 1;
+          debug = 0;
 
     var ObjSave = null,
         TimeOutImages = 5;
