@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.6
+// @version      1.3.7
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -512,7 +512,7 @@ let el = param.el,
 if(confirm(`Вы действительно хотите удалить?\n"${linkText}"?`)){
     if (ObjSave.hasOwnProperty('favorites') && index !== "" && index !== null && index !== undefined){
         $(el).animate({"height":"0px","opacity": "0"},'slow', function(){
-            ObjSave.favorites.pop(index);
+            ObjSave.favorites.splice(index, 1);
             $(this).remove();
             saveToStorage();
             if(debug) console.log("Элемент удален из избранного!");
