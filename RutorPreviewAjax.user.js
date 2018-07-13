@@ -260,7 +260,7 @@ function modifyData(param){
 
     $(content).find("tr").not(".c_h").hover(function(){$(this).css("background-color","transparent");},function(){$(this).css("background-color","transparent");});
 
-    let tableCount = $(content).find("table tr[class=^c_h]").length;
+    let tableCount = $(content).find("table tr[class^='c_h']").length;
 
     // Список файлов измененная загрузка
     let descrN = $(content).find(".header span").attr("onclick").toString().match(/descriptions\/(\d+)\.files/i)[1];
@@ -282,7 +282,7 @@ function modifyData(param){
 
     $(content).find("#hiden_cc").append($(content).find("#cem"));
 
-    let tableCom = $(content).find("table tr[class^=c_h]").parent().parent();
+    let tableCom = $(content).find("table tr[class^='c_h']").parent().parent();
 
     $(content).find("#hiden_cc").append(tableCom.prev(),tableCom.prev().prev(),tableCom);
 
