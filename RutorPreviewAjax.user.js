@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.3.9
+// @version      1.4.0
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@
 // @match        http://rutor.info/*
 // @match        http://rutor.is/*
 // @match        http://free-rutor.org/*
+// @match        http://freedom-tor.org/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -95,6 +96,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
           no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
           searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
+
+          hostname = location.origin,
 
           debug = 0;
 
@@ -430,12 +433,12 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             date_time = param.date_time,
             index = param.index,
 
-            FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:link, target:"_blank",title:linkText}).text(linkText),
+            FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:hostname+"/torrent/"+id, target:"_blank",title:linkText}).text(linkText),
             FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
             FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                             '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                             '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
-                            '<div class="poleLinks"><a href="'+"http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText))+'" target="_blank" title="Искать: '+linkText+'"><img src="'+searchIcon+'" alt="Искать:'+linkText+'" width="13"></a></div>'+
+                            '<div class="poleLinks"><a href="'+hostname+"/search/"+encodeURIComponent(searchEditReq(linkText))+'" target="_blank" title="Искать: '+linkText+'"><img src="'+searchIcon+'" alt="Искать:'+linkText+'" width="13"></a></div>'+
                             '</div>'),
             FavElBlockX = $('<div title="Удалить!"></div>').text("X").click(function(e){
                 let event_el = e.currentTarget,
@@ -759,7 +762,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                     });
 
                     let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
-                        window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
+                        window.location.href = hostname+"/search/"+encodeURIComponent(searchEditReq(linkText));
                     });
                     $(m_elem).append(search);
 
