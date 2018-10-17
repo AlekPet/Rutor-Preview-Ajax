@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.0
+// @version      1.4.1
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -11,6 +11,8 @@
 // @match        http://rutor.is/*
 // @match        http://free-rutor.org/*
 // @match        http://freedom-tor.org/*
+// @match        http://top-tor.org/*
+// @match        http://rutor.is/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
