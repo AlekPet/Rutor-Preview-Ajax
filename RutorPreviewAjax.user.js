@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.1
+// @version      1.4.3
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -13,10 +13,12 @@
 // @match        http://freedom-tor.org/*
 // @match        http://top-tor.org/*
 // @match        http://rutor.is/*
+// @match        http://live-rutor.org/*
+// @match        http://xrutor.org/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
-// @run-at document-end
+// @run-at document-body
 // @noframes
 // @grant GM_setValue
 // @grant GM_getValue
@@ -25,8 +27,9 @@
 // @require https://code.jquery.com/jquery-3.1.0.min.js
 
 // ==/UserScript==
+
 GM_addStyle("\
-.mDiv{width: 250px;border: 3px double #FFA302;right: 9px;text-align: center;color:white;}\
+.mDiv{width: 250px;border: 3px double #FFA302;/*right: 9px;*/text-align: center;color:white;}\
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00;}\
 .mDiv_inner{overflow-y: auto;max-height: 300px;}\
 .mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}\
@@ -88,8 +91,11 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;color:white;}\
 .mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}\
 .mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
-.mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;}\
+.mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;z-index:3;}\
 .box_buttons_inner {display: inline-block;margin-left: 20px;}\
+.mDiv_Popup_title_x {float: right; cursor: pointer;}\
+.mDiv_Popup_title_x:after {content: 'X';}\
+.mDiv_Popup_title_x:hover {color: yellow;}\
 ");
 
 (function() {
@@ -319,7 +325,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
         // Add see
         $(".mDiv_title.opens").show();
-        let textPop = $(elem).children(1).children()[4].innerText,
+        let a_elems = $(elem).children()[2].children[4].href.indexOf('magnet') == -1 ? $(elem).children()[2].children[4]: $(elem).children()[2].children[5],
+            textPop = a_elems.innerText,//.children(1).children()[5].innerText,
 
             imgSmall =  $(elem).nextAll(".my_tr:eq(0)").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
                 if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
@@ -416,11 +423,16 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
         $.ajax({
             url: link,
             success: function(data){
-
                 if(debug) console.log("Ajax запрос завершен!");
 
                 let ObjData = {data:data,button:button,elem:elem};
                 modifyData(ObjData);
+            },
+            error: function(e)
+            {
+                let nextEl = $(elem).next().next().children(0);
+                $(nextEl).css({"text-align":"center","color":"red"}).text(e.statusText.toUpperCase()+": Нет ответа от сервера")
+                ShowIHide({button:button, elem:elem});
             }
         });
     }
@@ -435,12 +447,14 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             date_time = param.date_time,
             index = param.index,
 
+            searchText = searchEditReq(linkText),
+
             FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:hostname+"/torrent/"+id, target:"_blank",title:linkText}).text(linkText),
             FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
             FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                             '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                             '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
-                            '<div class="poleLinks"><a href="'+hostname+"/search/"+encodeURIComponent(searchEditReq(linkText))+'" target="_blank" title="Искать: '+linkText+'"><img src="'+searchIcon+'" alt="Искать:'+linkText+'" width="13"></a></div>'+
+                            '<div class="poleLinks"><a href="'+hostname+"/search/"+encodeURIComponent(searchText)+'" target="_blank" title="Искать: '+linkText+'"><img src="'+searchIcon+'" alt="Искать:'+linkText+'" width="13"></a></div>'+
                             '</div>'),
             FavElBlockX = $('<div title="Удалить!"></div>').text("X").click(function(e){
                 let event_el = e.currentTarget,
@@ -585,14 +599,16 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
         }
     }
 
-    function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 3000){
+    function showMessage(title = "Сообщение", message, anim_time_sec = 1000, time_delay_sec = 3000, autohide=true){
         $(".mDiv_Popup_message_box > .mDiv_Popup_message").html(message);
-        $(".mDiv_Popup > .mDiv_Popup_title").text(title);
+        $(".mDiv_Popup > .mDiv_Popup_title span").text(title);
 
-        $(".mDiv_Popup_smoke").fadeIn('anim_time_sec', function(){
+        $(".mDiv_Popup_smoke").fadeIn(anim_time_sec, function(){
             $(".mDiv_Popup").fadeIn(anim_time_sec,function(){
-                let anim = function (){$(this).fadeOut(anim_time_sec, function(){$(".mDiv_Popup_smoke").fadeOut(anim_time_sec);});}.bind(this);
-                setTimeout(anim, time_delay_sec)
+                if(autohide){
+                    let anim = function (){$(this).fadeOut(anim_time_sec, function(){$(".mDiv_Popup_smoke").fadeOut(anim_time_sec);});}.bind(this);
+                    setTimeout(anim, time_delay_sec)
+                }
             });
         });
     }
@@ -602,6 +618,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
     }
 
     function makePanel(){
+        if(!document.getElementById("sidebar")) return;
+
         var hostisT = searchinHost("/torrent/"),
             div = $('<div class="mDiv">'+
                     (!hostisT?'<div class="mDiv_title">Настройки</div>'+
@@ -628,7 +646,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
         }
 
-        $(div).find("#checkbox_imgages_Load").on('change', function(){
+        $(div).find("#checkbox_imgages_Load").change(function(){
             if(debug) console.log("Предзагрузка: ",$(this)[0].checked);
 
             if (ObjSave.hasOwnProperty('options')){
@@ -638,7 +656,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             }
         }).attr("checked",chechVal);
 
-        $(div).find("#timoutTimeImages").on('change', function(){
+        $(div).find("#timoutTimeImages").change(function(){
             let valueTO = $(this).val();
 
             if(debug) console.log("Тайм-аут установлен в: ", valueTO+" сек.");
@@ -683,20 +701,30 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             }
         });
 
+        appendSmokeAndPopUp()
+    }
+
+    function appendSmokeAndPopUp(){
         $("body").append($('<div class="mDiv_Popup_smoke">'+
                            '<div class="mDiv_Popup">'+
-                           '<div class="mDiv_Popup_title"></div>'+
+                           '<div class="mDiv_Popup_title"><span></span><div class="mDiv_Popup_title_x"></div></div>'+
                            '<div class="mDiv_Popup_message_box">'+
                            '<div class="mDiv_Popup_message"></div>'+
                            '</div>'+
                            '</div>'));
+        $('.mDiv_Popup_title_x').click(function(){
+            $(".mDiv_Popup").fadeOut(anim_time_sec, function(){$(".mDiv_Popup_smoke").fadeOut(anim_time_sec);});
+        });
     }
 
     function searchEditReq(title){
-        let seatchText = title.match(/(.*)\[|\(/i)[1];
+        let seatchText = title.match(/(.*)(?:\(|\[)/i)[1];
 
-        if(seatchText === null || seatchText === undefined) seatchText = title;
+        if(seatchText === null || seatchText === undefined || !seatchText.length) seatchText = title;
 
+        if(seatchText.indexOf("/") !=-1 || seatchText.indexOf("\\")!=-1){
+            seatchText = seatchText.replace(/\s?\/\s?|\s?\\\s?/g," ")
+        }
         return seatchText;
     }
 
@@ -733,6 +761,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
     function addPoleInfo(){
         if(!searchinHost("/torrent/")){
+
             // Ищим классы для получения данных
             $(".backgr, .gai, .tum").each(function(i, val){
                 // Если класс заголовка добавляем свой заголовок для кнопки
@@ -742,17 +771,27 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                     // Если нет получаем информацию
                     let elem = this,
                         m_elem = this.children[1],
-
-                        down = m_elem.children[0].href,
-                        magn = m_elem.children[1].href,
-                        link = m_elem.children[2].href,
-                        linkText = m_elem.children[2].innerText,
+                        link, linkText, magn, down, count_magnet = 2,
 
                         img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
-
                         newI = $('<td style="text-align:center;"></td>').html(img);
 
-                    $("<a href='javascript:void(0);' title='Add Favorite'><img src='"+favIcon+"' width='15'></a>").insertBefore(m_elem.children[0]).click(function(){
+                    if(searchinHost("/top/")){
+                        count_magnet = 1
+                    }
+
+                    if(m_elem.children[count_magnet] && m_elem.children[count_magnet].href.indexOf('magnet') == -1){
+                        down = m_elem.children[1].href
+                        link = m_elem.children[count_magnet] ? m_elem.children[count_magnet].href : null
+                        linkText = m_elem.children[count_magnet] ? m_elem.children[count_magnet].innerText : null
+                    } else {
+                        down = m_elem.children[count_magnet-1].href
+                        magn = m_elem.children[count_magnet] ? m_elem.children[count_magnet].href : null
+                        link = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].href : null
+                        linkText = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].innerText : null
+                    }
+
+                    $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(){
                         addFav({
                             el:this,
                             link:link,
@@ -763,10 +802,10 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                         });
                     });
 
-                    let search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
-                        window.location.href = hostname+"/search/"+encodeURIComponent(searchEditReq(linkText));
+                    let search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(){
+                        let searchText = searchEditReq(linkText);
+                        window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
                     });
-                    $(m_elem).append(search);
 
                     // Image event
                     $(img).click(function(e) {
@@ -807,7 +846,8 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                 });
             }),
                 $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
-                window.location.href = "http://tor-ru.net/search/"+encodeURIComponent(searchEditReq(linkText));
+                let searchText = searchEditReq(linkText);
+                window.location.href = hostname + "/search/"+encodeURIComponent(searchText);
             })
         }
     }
@@ -865,6 +905,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             sortWhat.razd.sort(function(a,b) {
                 var x = a[field].toLowerCase();
                 var y = b[field].toLowerCase();
+
                 if(x < y) return -1;
                 if(x > y) return 1;
                 return 0
@@ -997,7 +1038,10 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                         }
                     })
 
-                    objCat.razd.push({es:this, date:dateT, name:this.children[2].children[3].innerText, size:complSize, up:colR, down:colU})
+                    let nameSorti = this.children[2].children[4].innerText
+                    if(!nameSorti || nameSorti.length == 0) nameSorti = this.children[2].children[0].getAttribute('title');
+
+                    objCat.razd.push({es:this, date:dateT, name:nameSorti, size:complSize, up:colR, down:colU})
                 })
                 massivT.push(objCat)
                 setEventHeaderTitle.call(this, massivT[idx])
@@ -1014,14 +1058,47 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
     }
 
     function init(){
+        setTimeout(function(){
         AdBlock();
         loadStorage();
         makePanel();
         addPoleInfo();
         remakeFav();
         updateFav();
-        sorting();
+        //sorting(); // using jquery.tablesorter on site
+        }, 500);
     }
 
-    init();
+    // To fix the script on the website:
+    // Replace the function 'sotrdgts' (jquery.tablesorter) on the site,
+    // because there is an error on the site and the userscript does not work correctly!
+    document.addEventListener('readystatechange', function(){
+        if(document.readyState == 'interactive'){
+        $(`<script>function sotrdgts() {
+            if($(".sorted tbody td").length) {
+                $(".sorted tbody td").each(function() {
+                    $(this).html("<s>" + appndvl($(this).html()) + "</s>" + $(this).html());
+                });
+                $(".sorted tbody td[colspan=2]").each(function() {
+                    $(this).replaceWith('<td>' + $(this).html() + '</td><td></td>');
+                });
+                $(".sorted").each(function() {
+                    $(this).tablesorter({
+                        widgets: ['zebra'],
+                        headers: {
+                            0: { sorter: 'digit' } ,
+                            3: { sorter: 'digit' } ,
+                            4: { sorter: 'digit' }
+                        }
+                    });
+                });
+            } else {
+                setTimeout(function() {sotrdgts();}, 200);
+            }
+        }</script>`).appendTo(document.body);
+
+       } else if(document.readyState == 'complete'){
+           init();
+       }
+    });
 })();
