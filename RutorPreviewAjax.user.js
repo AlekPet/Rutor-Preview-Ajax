@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.3
+// @version      1.4.5
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -15,6 +15,7 @@
 // @match        http://rutor.is/*
 // @match        http://live-rutor.org/*
 // @match        http://xrutor.org/*
+// @match        http://rutor.info/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
@@ -96,7 +97,19 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .mDiv_Popup_title_x {float: right; cursor: pointer;}\
 .mDiv_Popup_title_x:after {content: 'X';}\
 .mDiv_Popup_title_x:hover {color: yellow;}\
+tr.backgr td > div {display: inline;}\
 ");
+
+/* sorted plugin jquery
+\
+tr.backgr td:not(:first-child):not(:last-child) {background: url(/agrrr/img/sort-bg.gif) 100% -70px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 19px;}\
+tr.backgr td.headerSortUp{background-position-y: -20px;}\
+tr.backgr td.headerSortDown{background-position-y: -120px;}\
+\
+tr.backgr td > div.headerSortUp{background-position-y: -135px;}\
+tr.backgr td > div.headerSortDown{background-position-y: -36px;}\
+tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 20px;display: inline;height: 20px;position: relative;top: 1px;}\
+*/
 
 (function() {
     'use strict';
@@ -262,7 +275,13 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             button = param.button,
             elem = param.elem,
 
-            content = $(data).find("#content")[0];
+            content = $(data).find("#content")[0] || undefined;
+        if (!content){
+            let nextEl = $(elem).next().next().children(0);
+
+            $(nextEl).html("<div style='text-align: center;font: italic 12pt monospace;color:red;'>Страница пока не доступна!</div>");
+            return false;
+        }
 
         content.removeChild(content.children[0]);
         content.removeChild(content.children[0]);
@@ -892,9 +911,12 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
     // Сортировка и корекция развернутых раздач
     function correctSortRazdch(sortWhat, type, field, butIndx){
-        let dataClicked = sortWhat.sorti[butIndx].press
+        let dataClicked = sortWhat.sorti[butIndx].press,
+            __this = this,
+            press = this
 
         sortWhat = Object.assign({}, sortWhat);
+
         if(type == 0){
             sortWhat.razd.sort(function(a,b) {
                 var an = a[field],
@@ -928,20 +950,32 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             }
         }
 
+        if(butIndx == 3 || butIndx == 4){
+            const _this = $(sortWhat.sorti[butIndx].el_img)
+            press = _this
+            //_this.hasClass("headerSortDown") ? _this.removeClass("headerSortDown").addClass("headerSortUp"):_this.removeClass("headerSortUp").addClass("headerSortDown")
+        } /*else{
+            $(__this).hasClass("headerSortDown") ? $(__this).removeClass("headerSortDown").addClass("headerSortUp"):$(__this).removeClass("headerSortUp").addClass("headerSortDown")
+        }*/
+
         sortWhat.sorti.map(function(currarr, indarr){
             if(indarr !== butIndx){
                 currarr.press = false
+                //$(currarr.el_img).removeClass("headerSortUp headerSortDown")
+
                 if($(currarr.el_img).is("img")) $(currarr.el_img).css("transform", "scaleY(1)");
                 else $(currarr.el_img).find("img").css("transform", "scaleY(1)")
             }
         })
 
-        if($(this).is("img")){
-            $(this).css("transform", "scaleY("+(dataClicked?"1":"-1")+")")
+        if($(press).is("img")){
+            $(press).css("transform", "scaleY("+(dataClicked?"1":"-1")+")")
         } else {
-            $(this).find("img[width^=15]").css("transform", "scaleY("+(dataClicked?"1":"-1")+")")
+            $(press).find("img[width^=15]").css("transform", "scaleY("+(dataClicked?"1":"-1")+")")
         }
+
         sortWhat.sorti[butIndx].press = !sortWhat.sorti[butIndx].press
+
         if(debug) console.log("Button: ",butIndx,"Value buttons: ",sortWhat.sorti[0].press,sortWhat.sorti[1].press,sortWhat.sorti[2].press,sortWhat.sorti[3].press,sortWhat.sorti[4].press)
     }
 
@@ -954,12 +988,26 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
                 if(idxel == 4 && el.innerText == "Пиры"){
                     let img = $("<img>").attr({"src":"https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif","width":"15"}).css({"position": "relative","top":"3px","cursor": "pointer"}).attr({"title":"Сортировать по Раздающим","id":"_Up"}),
                         img_clone = img.clone(false).attr({"title":"Сортировать по Качающим","id":"_Down"})
-                    $(el).css({"width": "90px"}).append($("<span>").text(" Р"),img,$("<span>").text("К"),img_clone)
-                    titleSort.push({el_img:img, index: idxel, press: false},{el_img:img_clone, index: idxel+1,press: false})
+                    $(el).css({"width": "90px"}).append($("<div>").text(" Р",).css({"cursor": "pointer"}).attr({"title":"Сортировать по Раздающим","id":"_Up"}),
+                                                        el,img,
+                                                        $("<div>").text("К").css({"cursor": "pointer"}).attr({"title":"Сортировать по Качающим","id":"_Down"}),
+                                                        el,img_clone
+                                                       )
+                    titleSort.push({
+                        el_img: $(el).find("div").eq(0),el_img:img,
+                        index: idxel,
+                        press: false},
+                                   {
+                        el_img: $(el).find("div").eq(1),el_img:img_clone,
+                        index: idxel+1,press: false
+                    })
                 } else {
                     let img = $("<img>").attr({"src":"https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif","width":"15"}).css({"position": "relative","top": ($(el).children().first().is("img")?"-10px":"3px")})
                     $(el).css({"width": "80px", "cursor": "pointer"}).attr("title","Сортировать по \""+($(el).children().first().is("img")?"Добавлено":$(el).text())+"\"").append(img)
-                    titleSort.push({el_img:el, index: idxel,press: false})
+                    titleSort.push({
+                        el_img: el,el_img:el,
+                        index: idxel,
+                        press: false})
                 }
             })
         massiv.sorti = titleSort
@@ -976,7 +1024,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
             correctSortRazdch.call(this,massiv,0, "size",2)
         })
         // By Up/Down
-        titles.eq(4).find("img").each(function(img_indx, el){
+        titles.eq(4).find("div, img").each(function(img_indx, el){ // titles.eq(4).find("img")
             $(this).click(function(){
                 if(el.id == "_Up"){
                     correctSortRazdch.call(el, massiv, 0, "up",3)
@@ -1059,46 +1107,48 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 
     function init(){
         setTimeout(function(){
-        AdBlock();
-        loadStorage();
-        makePanel();
-        addPoleInfo();
-        remakeFav();
-        updateFav();
-        //sorting(); // using jquery.tablesorter on site
+            AdBlock();
+            loadStorage();
+            makePanel();
+            addPoleInfo();
+            remakeFav();
+            updateFav();
+            sorting();
+            //if(searchinHost("/top/")) sorting(); // using jquery.tablesorter on site, run only TOP category
         }, 500);
     }
 
     // To fix the script on the website:
     // Replace the function 'sotrdgts' (jquery.tablesorter) on the site,
     // because there is an error on the site and the userscript does not work correctly!
-    document.addEventListener('readystatechange', function(){
+    /*document.addEventListener('readystatechange', function(){
         if(document.readyState == 'interactive'){
-        $(`<script>function sotrdgts() {
-            if($(".sorted tbody td").length) {
-                $(".sorted tbody td").each(function() {
-                    $(this).html("<s>" + appndvl($(this).html()) + "</s>" + $(this).html());
-                });
-                $(".sorted tbody td[colspan=2]").each(function() {
-                    $(this).replaceWith('<td>' + $(this).html() + '</td><td></td>');
-                });
-                $(".sorted").each(function() {
-                    $(this).tablesorter({
-                        widgets: ['zebra'],
-                        headers: {
-                            0: { sorter: 'digit' } ,
-                            3: { sorter: 'digit' } ,
-                            4: { sorter: 'digit' }
-                        }
-                    });
-                });
-            } else {
-                setTimeout(function() {sotrdgts();}, 200);
-            }
-        }</script>`).appendTo(document.body);
+            $(`<script>function sotrdgts() {
+if($(".sorted tbody td").length) {
+$(".sorted tbody td").each(function() {
+$(this).html("<s>" + appndvl($(this).html()) + "</s>" + $(this).html());
+});
+$(".sorted tbody td[colspan=2]").each(function() {
+$(this).replaceWith('<td>' + $(this).html() + '</td><td></td>');
+});
+$(".sorted").each(function() {
+$(this).tablesorter({
+widgets: ['zebra'],
+headers: {
+0: { sorter: 'digit' } ,
+3: { sorter: 'digit' } ,
+4: { sorter: 'digit' }
+}
+});
+});
+} else {
+setTimeout(function() {sotrdgts();}, 200);
+}
+}</script>`).appendTo(document.body);
 
-       } else if(document.readyState == 'complete'){
-           init();
-       }
-    });
+        } else if(document.readyState == 'complete'){
+            init();
+        }
+    });*/
+    init()
 })();
