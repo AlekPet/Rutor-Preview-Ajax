@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.5
+// @version      1.4.6
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -51,8 +51,10 @@ GM_addStyle("\
 div#index tr.my_tr:hover { background-color: white;}\
 div#my_content tr:hover { background-color: white;}\
 \
-div#hideAll {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}\
-div#hideAll:hover{background: linear-gradient(#2fc12f,#246318);}\
+.buttonsStyle {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}\
+.buttonsStyle:hover{background: linear-gradient(#2fc12f,#246318);}\
+div.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}\
+.mDiv_FavControl:hover{background: linear-gradient(#be0a2f,#bc8ec5);}\
 \
 div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}\
 div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}\
@@ -484,11 +486,15 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             }),
             FavBlockEl = $('<div class="FavBlockEl"></div>').append(FavElTitle,FavAddBlock,FavElBlockX);
 
-        if($(".mDiv_FavInner").children().length === 0) {
-            $(".mDiv_FavInner").empty();
-        }
 
         $(".mDiv_FavInner").append(FavBlockEl);
+
+        if($(".mDiv_FavInner").children().length === 0) {
+            $(".mDiv_FavInner").empty();
+            $(".mDiv_FavControl").fadeOut('slow');
+        } else {
+            $(".mDiv_FavControl").fadeIn('slow');
+        }
 
         $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
     }
@@ -541,6 +547,19 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         }
     }
 
+    function revomeFavAll(){
+        if(confirm(`Вы действительно хотите очистить список избранного?`)){
+            if (ObjSave.hasOwnProperty('favorites') && Object.keys(ObjSave.favorites).length){
+                ObjSave.favorites = [];
+                $(".mDiv_FavInner").empty().text('Пусто...');;
+                saveToStorage();
+                if(debug) console.log("Все элементы удалены из избранного!");
+                $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
+                $(".mDiv_FavControl").fadeOut('slow')
+            }
+        }
+    }
+
     function removeFav(param){
         let el = param.el,
             id = param.id,
@@ -555,11 +574,14 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     saveToStorage();
                     if(debug) console.log("Элемент удален из избранного!");
                     $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
-                });
-            }
 
-            if($(".mDiv_FavInner").children().length === 0) {
-                $(".mDiv_FavInner").text('Пусто...');
+                    if(!Object.keys(ObjSave.favorites).length) {
+                        $(".mDiv_FavInner").text('Пусто...');
+                        $(".mDiv_FavControl").fadeOut('slow')
+                    } else {
+                        $(".mDiv_FavControl").fadeIn('slow')
+                    }
+                });
             }
         }
     }
@@ -642,7 +664,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         var hostisT = searchinHost("/torrent/"),
             div = $('<div class="mDiv">'+
                     (!hostisT?'<div class="mDiv_title">Настройки</div>'+
-                     '<div id="hideAll">Свернуть все</div>'+
+                     '<div id="hideAll" class="buttonsStyle">Свернуть все</div>'+
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '<div class="preLoadImagesRow">'+
                      '<div class="preLoadImagesCell">Предзагрузка: </div>'+
@@ -656,6 +678,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     '<div class="mDiv_title opens">Открытые</div>'+
                     '<div class="mDiv_inner"></div>'+
                     '<div class="mDiv_title fav">Избранное</div>'+
+                    '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
                     '<div class="mDiv_FavInner"></div>'+
                     '</div>'+
                     '</div>'),
@@ -691,10 +714,12 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
         $("#sidebar").append(div);
 
-        if($(".mDiv_FavInner").children().length > 0) {
+        if(ObjSave.hasOwnProperty('favorites') && Object.keys(ObjSave.favorites).length > 0) {
             $(".mDiv_FavInner").fadeIn('slow');
+            $(".mDiv_FavControl").fadeIn('slow');
         } else{
             $(".mDiv_FavInner").text('Пусто...').fadeIn('slow');
+            $(".mDiv_FavControl").fadeOut('slow');
         }
 
         let maxTop = $(".sideblock:nth-child(1)").offset().top+parseFloat($(".sideblock:nth-child(1)").css("height"))+parseFloat($(".sideblock:nth-child(2)").css("height"));
@@ -720,6 +745,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             }
         });
 
+        $(".mDiv_FavControl").click(revomeFavAll);
+
         appendSmokeAndPopUp()
     }
 
@@ -732,7 +759,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                            '</div>'+
                            '</div>'));
         $('.mDiv_Popup_title_x').click(function(){
-            $(".mDiv_Popup").fadeOut(anim_time_sec, function(){$(".mDiv_Popup_smoke").fadeOut(anim_time_sec);});
+            $(".mDiv_Popup").fadeOut(1000, function(){$(".mDiv_Popup_smoke").fadeOut(1000);});
         });
     }
 
