@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6
+// @version      1.4.6.1
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -817,15 +817,14 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     // Если нет получаем информацию
                     let elem = this,
                         m_elem = this.children[1],
-                        link, linkText, magn, down, count_magnet = 2,
+                        link, linkText, magn, down, count_magnet = 1,
 
                         img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
                         newI = $('<td style="text-align:center;"></td>').html(img);
 
-                    if(searchinHost("/top/")){
+                    /*if(searchinHost("/top")){
                         count_magnet = 1
-                    }
-
+                    }*/
                     if(m_elem.children[count_magnet] && m_elem.children[count_magnet].href.indexOf('magnet') == -1){
                         down = m_elem.children[1].href
                         link = m_elem.children[count_magnet] ? m_elem.children[count_magnet].href : null
