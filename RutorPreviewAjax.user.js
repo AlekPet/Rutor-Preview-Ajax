@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.1
+// @version      1.4.6.2
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -16,10 +16,11 @@
 // @match        http://live-rutor.org/*
 // @match        http://xrutor.org/*
 // @match        http://rutor.info/*
+// @match        http://new-rutor.org/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
-// @run-at document-body
+// @run-at document-end
 // @noframes
 // @grant GM_setValue
 // @grant GM_getValue
@@ -100,6 +101,7 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .mDiv_Popup_title_x:after {content: 'X';}\
 .mDiv_Popup_title_x:hover {color: yellow;}\
 tr.backgr td > div {display: inline;}\
+.blend_class{background-blend-mode: luminosity;background-color: #ffd74540;}\
 ");
 
 /* sorted plugin jquery
@@ -485,7 +487,9 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                 removeFav({el:el_block, id:id, linkText:linkText, index:$(".mDiv_FavInner .FavBlockEl").index(el_block)});
             }),
             FavBlockEl = $('<div class="FavBlockEl"></div>').append(FavElTitle,FavAddBlock,FavElBlockX);
-
+        FavBlockEl.on('mouseenter mouseleave', function(ev){
+            $(this).first().toggleClass("blend_class")
+        });
 
         $(".mDiv_FavInner").append(FavBlockEl);
 
