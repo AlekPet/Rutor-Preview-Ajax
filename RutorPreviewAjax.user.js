@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.2
+// @version      1.4.6.3
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -27,7 +27,6 @@
 // @grant GM_addStyle
 // @grant GM_addValueChangeListener
 // @require https://code.jquery.com/jquery-3.1.0.min.js
-
 // ==/UserScript==
 
 GM_addStyle("\
@@ -117,7 +116,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
 (function() {
     'use strict';
-    const image_arrow = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif",
+    const $ = window.jQuery,
+          image_arrow = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif",
           no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
           searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
@@ -280,6 +280,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             elem = param.elem,
 
             content = $(data).find("#content")[0] || undefined;
+
         if (!content){
             let nextEl = $(elem).next().next().children(0);
 
@@ -428,10 +429,11 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     MiniPanel(param);
                 }
 
-                $(".mDiv_title.opens").text('Открытые '+'('+$(".seeEl").length+')');
+                $(".mDiv_title.opens").text(`Открытые (${$(".seeEl").length})`);
 
                 // Back offset on page
-                if(event_el !== "minipanel") $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
+                //if(event_el !== "minipanel") $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
+                $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
             });
     }
 
@@ -443,21 +445,26 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             link = param.link,
             elem = param.elem;
 
-        $.ajax({
-            url: link,
-            success: function(data){
-                if(debug) console.log("Ajax запрос завершен!");
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                url: link,
+                success:  function(data){
+                    if(debug) console.log("Ajax запрос завершен!");
 
-                let ObjData = {data:data,button:button,elem:elem};
-                modifyData(ObjData);
-            },
-            error: function(e)
-            {
-                let nextEl = $(elem).next().next().children(0);
-                $(nextEl).css({"text-align":"center","color":"red"}).text(e.statusText.toUpperCase()+": Нет ответа от сервера")
-                ShowIHide({button:button, elem:elem});
-            }
-        });
+                    //let ObjData = {data:data,button:button,elem:elem};
+                    //modifyData(ObjData);
+                    resolve({data:data,button:button,elem:elem})
+                },
+                error: function(e)
+                {
+                    let nextEl = $(elem).next().next().children(0);
+                    $(nextEl).css({"text-align":"center","color":"red"}).text(e.statusText.toUpperCase()+": Нет ответа от сервера")
+                    ShowIHide({button:button, elem:elem});
+                    reject(null)
+                }
+            });
+        })
+
     }
 
     function MakeFav(param){
@@ -468,12 +475,13 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             Down = param.Down,
             Mdown = param.Mdown,
             date_time = param.date_time,
+            category = param.category,
             index = param.index,
 
             searchText = searchEditReq(linkText),
 
             FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:hostname+"/torrent/"+id, target:"_blank",title:linkText}).text(linkText),
-            FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;"></div>').append(FavElTitleA),
+            FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;position:relative;"></div>').append(FavElTitleA,'<div class="class_category" style="position: absolute;top: -5px;left: 3px;color: #800047;font-size: 8px;font-weight: bold;background: #ffbbbb;padding: 0 5px;">'+category+'</div>'),
             FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                             '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                             '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
@@ -503,7 +511,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         $(".mDiv_title.fav").text('Избранное '+($(".mDiv_FavInner").children().length == 0 ?'':'('+$(".mDiv_FavInner").children().length+')'));
     }
 
-    function addFav(param){
+    async function addFav(param){
         let elem = param.el || null,
             link = param.link,
             linkText = param.linkText,
@@ -511,7 +519,9 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             Mdown = param.Mdown,
             date_time = param.date_time,
 
-            id = link;
+            id = link,
+
+            category = await getCategoryTorrent(param)
 
         try{
             // Get id
@@ -538,7 +548,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     id: id,
                     Down: encodeURI(Down),
                     Mdown: encodeURI(Mdown),
-                    date_time: date_time
+                    date_time: date_time,
+                    category: category
                 });
 
                 saveToStorage();
@@ -629,6 +640,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                 $(".mDiv_FavInner").empty();
                 for(let pFav = 0; pFav<ObjSave.favorites.length; pFav++){
                     let ObjFavCur = ObjSave.favorites[pFav];
+
                     MakeFav({
                         el: null,
                         link: decodeURI(ObjFavCur.link),
@@ -637,6 +649,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         id: ObjFavCur.id,
                         Mdown: decodeURI(ObjFavCur.Mdown),
                         date_time: ObjFavCur.date_time,
+                        category: ObjFavCur.category,
                         index: pFav
                     });
                 }
@@ -840,7 +853,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         linkText = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].innerText : null
                     }
 
-                    $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(){
+                    $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(ev){
+                        ev.stopPropagation()
                         addFav({
                             el:this,
                             link:link,
@@ -851,13 +865,15 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         });
                     });
 
-                    let search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(){
+                    let search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(ev){
+                        ev.stopPropagation()
                         let searchText = searchEditReq(linkText);
                         window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
                     });
 
                     // Image event
-                    $(img).click(function(e) {
+                    $(img).add(elem).click(async function(e) {
+                        e.stopPropagation()
                         if(!$(elem).next().is(".tr_loading")){
                             $(elem).after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
                                           '<div class="loading_tor_box">'+
@@ -866,7 +882,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                                           '</td></tr>');
                             $(elem).next('.tr_loading').after('<tr class="my_tr"><td colspan="6"></td></tr>');
 
-                            ajaxJQ({button : img , link: link, elem : elem});
+                            ajaxJQ({button : img , link: link, elem : elem}).then((data)=> modifyData(data));
                         } else {
                             ShowIHide({elem:elem, button: img, event_el: e.currentTarget.className});
                         }
@@ -901,10 +917,37 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         }
     }
 
-    function remakeFav(){
+    async function getCategoryTorrent(currentObj){
+        let category_ ="Нет категории"
+        await new Promise(function(res,rej){
+            $.ajax({
+                url: currentObj.link,
+                success:  function(data){
+                    try{
+                        category_ = data.match(/Категория.*\>(.*)\<\/a/i)[1]
+                    }
+                    catch(e){
+                        if(debug)console.warn(`Категория не найдена у: ${unescape(currentObj.linkText)}... (Раздача не существует)`)
+                    }
+                    res(category_)
+                },
+                error: function(e){
+                    rej("Нет категории")
+                }
+
+            }).then(function(res){
+
+            })
+        })
+        if(debug) console.log(`Категория у '${unescape(currentObj.linkText)}' следующая '${category_!="Нет категории"?category_:'%cНет категории'}'`, "color:red")
+        return category_
+    }
+
+    async function remakeFav(){
         if (ObjSave.hasOwnProperty('favorites')){
             // Favorites object
             let isEdit = !1;
+
             if(Object.prototype.toString.call(ObjSave.favorites) == "[object Object]"){
                 if(Object.keys(ObjSave.favorites).length > 0){
                     for(let pFav in ObjSave.favorites){
@@ -935,6 +978,51 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
                 if(debug) console.log("Исправленме Ид и добавление Даты: ",ObjSave,"Были ли правки:",isEdit)
                 saveToStorage();
+
+            } else{
+                if(!debug) console.log('Объект фаворит это массив...')
+                for(let obj=0;obj<ObjSave.favorites.length;obj++){
+                    let currentObj = ObjSave.favorites[obj]
+
+                    // no date
+                    if(!currentObj.hasOwnProperty("date_time")){
+                        currentObj.date_time = new Date().getTime()
+                        if(debug) console.log("Нет Даты!: ", currentObj.date_time)
+                    }
+
+                    // http
+                    if(currentObj.hasOwnProperty("link") && currentObj.hasOwnProperty("Down")){
+                        let torrentId = currentObj.link
+                        if(currentObj.link.includes("http://")){
+                            if(debug) console.log("Link содержит http!: ", currentObj.link)
+                            try{
+                                torrentId = currentObj.link.match(/.*torrent\/(\d+)\//i)[1];
+                            } catch(e){
+                                torrentId = currentObj.link
+                            }
+                            currentObj.link = `${hostname}/torrent/${torrentId}`
+
+                        }
+                        if(currentObj.Down.includes("http://")){
+                            if(debug) console.log("Down содержит http!: ", currentObj.Down)
+                            currentObj.Down = `http://d.${location.hostname}/download/${torrentId}`
+                        }
+                        if(debug) console.log('New link and download:', currentObj)
+                    }
+
+                    //---------- Category
+                    if(!currentObj.hasOwnProperty('category')){
+                        isEdit = !0;
+                        let category_ = await getCategoryTorrent(currentObj)
+                        currentObj.category = category_
+                    }
+                    //----------
+                }
+            }
+            if(debug) console.log('После remakeFav:', ObjSave.favorites)
+            if(isEdit){
+                saveToStorage();
+                console.log('Save remake...')
             }
         }
     }
@@ -1090,7 +1178,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     }
 
                     // Date
-                    let dateT = this.children[1].innerText                    
+                    let dateT = this.children[1].innerText
                     dateT = dateT.split(/\s+/)
 
                     $.each(month, function(idx,val){
@@ -1133,19 +1221,24 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         if($(".sideblock2").length){
             $(".sideblock2").remove();
         }
+
+        let jquery = document.createElement('script')
+        jquery.type = "text/javascript"
+        jquery.src = 'https://code.jquery.com/jquery-3.1.0.min.js'
+        document.head.appendChild(jquery)
     }
 
     function init(){
-        setTimeout(function(){
-            AdBlock();
-            loadStorage();
-            makePanel();
-            addPoleInfo();
-            remakeFav();
-            updateFav();
-            sorting();
-            //if(searchinHost("/top/")) sorting(); // using jquery.tablesorter on site, run only TOP category
-        }, 500);
+        //setTimeout(function(){
+        AdBlock();
+        loadStorage();
+        makePanel();
+        addPoleInfo();
+        remakeFav();
+        updateFav();
+        sorting();
+        //if(searchinHost("/top/")) sorting(); // using jquery.tablesorter on site, run only TOP category
+        //}, 500);
     }
 
     // To fix the script on the website:
