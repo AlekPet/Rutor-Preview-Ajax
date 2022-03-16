@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.3
+// @version      1.4.6.4
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -29,89 +29,90 @@
 // @require https://code.jquery.com/jquery-3.1.0.min.js
 // ==/UserScript==
 
-GM_addStyle("\
-.mDiv{width: 250px;border: 3px double #FFA302;/*right: 9px;*/text-align: center;color:white;}\
-.mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00;}\
-.mDiv_inner{overflow-y: auto;max-height: 300px;}\
-.mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}\
-\
-.mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}\
-.mDiv_title.fav{filter:  hue-rotate(200deg);}\
-\
-.com_Style{background: linear-gradient(#b7b7b7,#545454);color: white;text-align: center;padding: 4px;cursor: pointer;user-select: none; width: 300px;margin: 0 auto;border-radius: 8px;transition: all 0.5s ease;margin-bottom: 10px;}\
-.com_Style:hover {background: linear-gradient(#676666,#9e9e9e);width: 350px;transition: all 0.5s ease-out;font-size: 1.2em;}\
-\
-#my_content{border: 1px solid silver;}\
-.my_tr{display:none;}\
-\
-.footSpoiler{text-align: center; padding: 10px;}\
-\
-.box_comments{background: #d0caca;width: 90%;margin: 0 auto;padding: 10px;border-radius:8px;}\
-\
-div#index tr.my_tr:hover { background-color: white;}\
-div#my_content tr:hover { background-color: white;}\
-\
-.buttonsStyle {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}\
-.buttonsStyle:hover{background: linear-gradient(#2fc12f,#246318);}\
-div.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}\
-.mDiv_FavControl:hover{background: linear-gradient(#be0a2f,#bc8ec5);}\
-\
-div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}\
-div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}\
-div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}\
-.minipanel{display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted white;background: linear-gradient(#df99e8,#ff6400);}\
-.minipanel:hover {background: linear-gradient(#d377de,#ff7000);}\
-.minipanel:hover img{transition:1s all;transform: rotateX(360deg) !important;}\
-.minipanel img{transition:1s all;}\
-\
-.loading_tor_box{padding: 5px;}\
-.loading_tor {width: 100%;background: #e0dcdc;border-radius: 8px;}\
-.loading_tor_text{height: inherit;width: 0%;background: linear-gradient(#1dff60, #00b327);border-radius: 8px;color: #676767;font-size: 1em;padding: 2px;}\
-\
-.checkbox_Load:not(checked) {opacity: 0;}\
-.checkbox_Load + label {cursor: pointer;position: absolute;left: 70%;}\
-.checkbox_Load:checked + label:before {background: #53d64c;}\
-.checkbox_Load:checked + label:after {left: 5px;content: 'ON';color: green;}\
-.checkbox_Load:not(checked) + label:before {content: '';position: absolute;top: 2px;left: -28px;width: 60px;height: 20px;background: #ff6060;box-shadow: inset 0 2px 3px rgba(0,0,0,.2);}\
-.checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}\
-div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}\
-.preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}\
-.preLoadImagesRow{display:table-row;}\
-.preLoadImagesRow #timoutTimeImages {width:50%;text-align: right;color: #00447f;font-family: monospace;font-weight: bold;}\
-\
-tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}\
-tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img, .box_buttons_inner a[href='javascript:void(0);'] img{transition:1s transform;}\
-tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:void(0);'] img:hover, .box_buttons_inner a[href='javascript:void(0);'] img:hover{transform: scale(1.3);filter: hue-rotate(270deg);}\
-.FavBlockEl{margin: 0 5px 10px 0;background: #fbf7f7;box-shadow: 2px 2px 5px silver;}\
-.FavBlockEl a {text-decoration: none;font-size: 0.8em;font-weight: bold;}\
-.FavBlockEl a:hover {color: #73046a !important;}\
-.FavBlockEl > div:nth-child(2) div {margin: 5px 0 5px 0;}\
-.FavBlockEl > div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}\
-.FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}\
-.poleLinks{display:block;transition: 1s transform;}\
-.poleLinks:hover{transform: scale(1.4);}\
-.mDiv_Popup {background: #fbf7f7;width: 300px;border: 1px solid silver;box-shadow: 4px 4px 8px #00000073;border-radius: 6px;margin: 10% auto;text-align: center; display:none;}\
-.mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;color:white;}\
-.mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}\
-.mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}\
-.mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;z-index:3;}\
-.box_buttons_inner {display: inline-block;margin-left: 20px;}\
-.mDiv_Popup_title_x {float: right; cursor: pointer;}\
-.mDiv_Popup_title_x:after {content: 'X';}\
-.mDiv_Popup_title_x:hover {color: yellow;}\
-tr.backgr td > div {display: inline;}\
-.blend_class{background-blend-mode: luminosity;background-color: #ffd74540;}\
-");
+GM_addStyle(`
+.mDiv{width: 250px;border: 3px double #FFA302;/*right: 9px;*/text-align: center;color:white;}
+.mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00; cursor: pointer;}
+.mDiv_inner{overflow-y: auto;max-height: 300px;}
+.mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}
+
+.mDiv_title.no_vis{filter: grayscale(1) brightness(1.5);}
+.mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}
+.mDiv_title.fav{filter:  hue-rotate(200deg);}
+
+.com_Style{background: linear-gradient(#b7b7b7,#545454);color: white;text-align: center;padding: 4px;cursor: pointer;user-select: none; width: 300px;margin: 0 auto;border-radius: 8px;transition: all 0.5s ease;margin-bottom: 10px;}
+.com_Style:hover {background: linear-gradient(#676666,#9e9e9e);width: 350px;transition: all 0.5s ease-out;font-size: 1.2em;}
+
+#my_content{border: 1px solid silver;}
+.my_tr{display:none;}
+
+.footSpoiler{text-align: center; padding: 10px;}
+
+.box_comments{background: #d0caca;width: 90%;margin: 0 auto;padding: 10px;border-radius:8px;}
+
+div#index tr.my_tr:hover { background-color: white;}
+div#my_content tr:hover { background-color: white;}
+
+.buttonsStyle {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}
+.buttonsStyle:hover{background: linear-gradient(#2fc12f,#246318);}
+div.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}
+.mDiv_FavControl:hover{background: linear-gradient(#be0a2f,#bc8ec5);}
+
+div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}
+div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}
+div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}
+.minipanel{display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted white;background: linear-gradient(#df99e8,#ff6400);}
+.minipanel:hover {background: linear-gradient(#d377de,#ff7000);}
+.minipanel:hover img{transition:1s all;transform: rotateX(360deg) !important;}
+.minipanel img{transition:1s all;}
+
+.loading_tor_box{padding: 5px;}
+.loading_tor {width: 100%;background: #e0dcdc;border-radius: 8px;}
+.loading_tor_text{height: inherit;width: 0%;background: linear-gradient(#1dff60, #00b327);border-radius: 8px;color: #676767;font-size: 1em;padding: 2px;}
+
+.checkbox_Load:not(checked) {opacity: 0;}
+.checkbox_Load + label {cursor: pointer;position: absolute;left: 70%;}
+.checkbox_Load:checked + label:before {background: #53d64c;}
+.checkbox_Load:checked + label:after {left: 5px;content: 'ON';color: green;}
+.checkbox_Load:not(checked) + label:before {content: '';position: absolute;top: 2px;left: -28px;width: 60px;height: 20px;background: #ff6060;box-shadow: inset 0 2px 3px rgba(0,0,0,.2);}
+.checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}
+div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}
+.preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}
+.preLoadImagesRow{display:table-row;}
+.preLoadImagesRow #timoutTimeImages {width:50%;text-align: right;color: #00447f;font-family: monospace;font-weight: bold;}
+
+tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}
+tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img, .box_buttons_inner a[href='javascript:void(0);'] img{transition:1s transform;}
+tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:void(0);'] img:hover, .box_buttons_inner a[href='javascript:void(0);'] img:hover{transform: scale(1.3);filter: hue-rotate(270deg);}
+.FavBlockEl{margin: 0 5px 10px 0;background: #fbf7f7;box-shadow: 2px 2px 5px silver;}
+.FavBlockEl a {text-decoration: none;font-size: 0.8em;font-weight: bold;}
+.FavBlockEl a:hover {color: #73046a !important;}
+.FavBlockEl > div:nth-child(2) div {margin: 5px 0 5px 0;}
+.FavBlockEl > div:nth-child(3) {display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted;background: linear-gradient(to bottom, #fbf7f7, #ffc7c7);font-weight: bold;color: orange;user-select: none;cursor: pointer;}
+.FavBlockEl > div:nth-child(3):hover{background: linear-gradient(#ffd4d4 50%, #f59999);}
+.poleLinks{display:block;transition: 1s transform;}
+.poleLinks:hover{transform: scale(1.4);}
+.mDiv_Popup {background: #fbf7f7;width: 300px;border: 1px solid silver;box-shadow: 4px 4px 8px #00000073;border-radius: 6px;margin: 10% auto;text-align: center; display:none;}
+.mDiv_Popup > .mDiv_Popup_title {padding: 5px;font-size: 1.2em;font-family: cursive;border-radius: 6px 6px 0 0;background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;color:white;}
+.mDiv_Popup > .mDiv_Popup_message_box {font-size: 1em;text-align: center;line-height: 1.5;color: darkslategrey;border-radius: 0 0 6px 6px;border-top: 1px solid #1d1d1d;}
+.mDiv_Popup_message_box > .mDiv_Popup_message {padding: 10px;max-height: 500px;min-height: 90px;overflow-y: auto;}
+.mDiv_Popup_smoke {position: fixed;background: #000000a6;left: 0;top: 0;width: 100%;height: 100%;display: none;z-index:3;}
+.box_buttons_inner {display: inline-block;margin-left: 20px;}
+.mDiv_Popup_title_x {float: right; cursor: pointer;}
+.mDiv_Popup_title_x:after {content: 'X';}
+.mDiv_Popup_title_x:hover {color: yellow;}
+tr.backgr td > div {display: inline;}
+.blend_class{background-blend-mode: luminosity;background-color: #ffd74540;}
+`);
 
 /* sorted plugin jquery
-\
-tr.backgr td:not(:first-child):not(:last-child) {background: url(/agrrr/img/sort-bg.gif) 100% -70px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 19px;}\
-tr.backgr td.headerSortUp{background-position-y: -20px;}\
-tr.backgr td.headerSortDown{background-position-y: -120px;}\
-\
-tr.backgr td > div.headerSortUp{background-position-y: -135px;}\
-tr.backgr td > div.headerSortDown{background-position-y: -36px;}\
-tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 20px;display: inline;height: 20px;position: relative;top: 1px;}\
+
+tr.backgr td:not(:first-child):not(:last-child) {background: url(/agrrr/img/sort-bg.gif) 100% -70px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 19px;}
+tr.backgr td.headerSortUp{background-position-y: -20px;}
+tr.backgr td.headerSortDown{background-position-y: -120px;}
+
+tr.backgr td > div.headerSortUp{background-position-y: -135px;}
+tr.backgr td > div.headerSortDown{background-position-y: -36px;}
+tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat;font-size: 12px;text-align: left;cursor: pointer;padding-right: 20px;display: inline;height: 20px;position: relative;top: 1px;}
 */
 
 (function() {
@@ -352,7 +353,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         let a_elems = $(elem).children()[2].children[4].href.indexOf('magnet') == -1 ? $(elem).children()[2].children[4]: $(elem).children()[2].children[5],
             textPop = a_elems.innerText,//.children(1).children()[5].innerText,
 
-            imgSmall =  $(elem).nextAll(".my_tr:eq(0)").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
+            imgSmall = $(elem).nextAll(".my_tr:eq(0)").find('table#details tr:eq(0) img:not([error_image])').filter(function(i,val){
                 if(val.width > 150 && !/banner|kinopoisk|imdb/i.test(this.src)){
                     return this;
                 }
@@ -382,11 +383,12 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             hide = button.clone(true),
             hideE = $._data(hide[0], "events"),
             addonBox = $('<div class="minipanel"></div>').attr('title',hide.attr('title')).each(function () {
-                for (var type in hideE)
+                for (var type in hideE){
                     for (var handler in hideE[type]){
                         if(handler === 'delegateCount') continue;
                         $.event.add(this, type, hideE[type][handler], hideE[type].data);
                     }
+                }
             }).append(hide.off()),
 
             elSee = $('<div class="seeEl"></div>').attr('title',textPop).append(imgBox, textBox,addonBox);
@@ -624,7 +626,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
     function updateForm(){
         if (ObjSave.hasOwnProperty('options')){
-            let  chechVal = null, timoutTimeImages = 5;
+            let chechVal = null,
+                timoutTimeImages = 5;
             if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
 
             $("#checkbox_imgages_Load")[0].checked = chechVal;
@@ -678,9 +681,15 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
     function makePanel(){
         if(!document.getElementById("sidebar")) return;
 
+        if (!ObjSave.options.hasOwnProperty('settings_visible')){
+            ObjSave.options.settings_visible = true
+        }
+
         var hostisT = searchinHost("/torrent/"),
+            settings_visible = ObjSave.options.settings_visible,
             div = $('<div class="mDiv">'+
-                    (!hostisT?'<div class="mDiv_title">Настройки</div>'+
+                    (!hostisT?'<div class="mDiv_title'+(settings_visible?'':' no_vis')+'">Настройки</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible?'display: block':'display: none')+'">'+
                      '<div id="hideAll" class="buttonsStyle">Свернуть все</div>'+
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '<div class="preLoadImagesRow">'+
@@ -691,12 +700,14 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="preLoadImagesCell">Тайм-аут загр.</div>'+
                      '<div class="preLoadImagesCell"><input type="number" id="timoutTimeImages" title="Тайм-аут загрузки изображений.\nЕсли 0, то тайм-аут устанавл. настройкой браузера!" min="0" step="0.1"> сек.</div>'+
                      '</div>'+
-                     '</div>':'')+
+                     '</div>':'<div class="mDiv_title'+(settings_visible?'':' no_vis')+'">Настройки</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible?'display: block':'display: none')+'">')+
                     '<div class="mDiv_title opens">Открытые</div>'+
                     '<div class="mDiv_inner"></div>'+
                     '<div class="mDiv_title fav">Избранное</div>'+
                     '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
                     '<div class="mDiv_FavInner"></div>'+
+                    '</div>'+
                     '</div>'+
                     '</div>'),
 
@@ -704,6 +715,21 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         if (ObjSave.hasOwnProperty('options')){
             if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
         }
+
+        $(div).find(".mDiv_title").click(function(){
+            const settings_body = $('.mDiv_settings_body')
+            if (settings_body.css('display') == 'none'){
+                settings_body.slideDown('slow')
+                ObjSave.options.settings_visible = true
+                $(this).removeClass('no_vis')
+
+            } else {
+                settings_body.slideUp('slow')
+                ObjSave.options.settings_visible = false
+                $(this).addClass('no_vis')
+            }
+            saveToStorage();
+        })
 
         $(div).find("#checkbox_imgages_Load").change(function(){
             if(debug) console.log("Предзагрузка: ",$(this)[0].checked);
@@ -792,8 +818,12 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
     }
 
     function fly(target, size, duration){
-        let posLeft = $(target).offset().left-$(this).offset().left,
-            posTop = $(target).offset().top-$(this).offset().top+200
+        target = $(target)
+
+        if($('.mDiv_settings_body').css('display') == 'none') target = $('.mDiv_title')
+
+        let posLeft = target.offset().left-$(this).offset().left,
+            posTop = target.offset().top-($(this).offset().top+target.height()/2)
 
         $(this).
         clone()
@@ -853,7 +883,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         linkText = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].innerText : null
                     }
 
-                    $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(ev){
+                    let favorite = $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").click(function(ev){
                         ev.stopPropagation()
                         addFav({
                             el:this,
@@ -863,13 +893,12 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                             Mdown:magn,
                             date_time: new Date().getTime()
                         });
-                    });
-
-                    let search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").insertBefore(m_elem.children[0]).click(function(ev){
-                        ev.stopPropagation()
-                        let searchText = searchEditReq(linkText);
-                        window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
-                    });
+                    }),
+                        search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").click(function(ev){
+                            ev.stopPropagation()
+                            let searchText = searchEditReq(linkText);
+                            window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
+                        });
 
                     // Image event
                     $(img).add(elem).click(async function(e) {
@@ -888,7 +917,9 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         }
                     });
 
-                    $(newI).prependTo(this);
+                    favorite.insertBefore(m_elem.children[0])
+                    search.insertBefore(m_elem.children[0])
+                    newI.prependTo(this);
                 }
             });
         } else {
@@ -898,22 +929,25 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                   Down = poleDown.eq(1).attr('href'),
                   Mdow = poleDown.eq(0).attr('href'),
 
-                  box_buttons = $("<div class='box_buttons_inner'></div>").insertAfter(poleDown.eq(1));
+                  box_buttons = $("<div class='box_buttons_inner'></div>").insertAfter(poleDown.eq(1)),
 
-            $("<a href='javascript:void(0);' title='Добавить в избранное'><img src='"+favIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
-                addFav({
-                    el:this,
-                    link:link,
-                    linkText:linkText,
-                    Down:Down,
-                    Mdown:Mdow,
-                    date_time: new Date().getTime()
-                });
-            }),
-                $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").appendTo(box_buttons).click(function(){
-                let searchText = searchEditReq(linkText);
-                window.location.href = hostname + "/search/"+encodeURIComponent(searchText);
-            })
+                  favorite = $("<a href='javascript:void(0);' title='Добавить в избранное'><img src='"+favIcon+"' width='15'></a>").click(function(){
+                      addFav({
+                          el:this,
+                          link:link,
+                          linkText:linkText,
+                          Down:Down,
+                          Mdown:Mdow,
+                          date_time: new Date().getTime()
+                      });
+                  }),
+                  search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
+                      let searchText = searchEditReq(linkText);
+                      window.location.href = hostname + "/search/"+encodeURIComponent(searchText);
+                  })
+
+            favorite.appendTo(box_buttons)
+            search.appendTo(box_buttons)
         }
     }
 
