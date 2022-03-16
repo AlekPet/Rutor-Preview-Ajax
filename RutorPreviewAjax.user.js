@@ -859,7 +859,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             $(".backgr, .gai, .tum").each(function(i, val){
                 // Если класс заголовка добавляем свой заголовок для кнопки
                 if(this.className == "backgr") {
-                    $('<td width="1px">Спойлер</td>').prependTo(this);
+                    $('<td width="1px"></td>').prependTo(this);
                 } else {
                     // Если нет получаем информацию
                     let elem = this,
