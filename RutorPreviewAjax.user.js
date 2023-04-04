@@ -1,32 +1,37 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.4
+// @version      1.4.6.7
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
-// @match        http://tor-ru.net/*
-// @match        http://zerkalo-rutor.org/*
-// @match        http://rutor.info/*
-// @match        http://rutor.is/*
-// @match        http://free-rutor.org/*
-// @match        http://freedom-tor.org/*
-// @match        http://top-tor.org/*
-// @match        http://rutor.is/*
-// @match        http://live-rutor.org/*
-// @match        http://xrutor.org/*
-// @match        http://rutor.info/*
-// @match        http://new-rutor.org/*
+// @match        http*://tor-ru.net/*
+// @match        http*://zerkalo-rutor.org/*
+// @match        http*://rutor.info/*
+// @match        http*://rutor.is/*
+// @match        http*://free-rutor.org/*
+// @match        http*://freedom-tor.org/*
+// @match        http*://top-tor.org/*
+// @match        http*://rutor.is/*
+// @match        http*://live-rutor.org/*
+// @match        http*://xrutor.org/*
+// @match        http*://rutor.info/*
+// @match        http*://new-rutor.org/*
+// @match        http*://6tor.org/*
 // @updateURL    https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @downloadURL  https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/RutorPreviewAjax.user.js
 // @icon         https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/icon.png
+// @connect *
 // @run-at document-end
 // @noframes
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_addStyle
 // @grant GM_addValueChangeListener
+// @grant GM.xmlHttpRequest
+// @grant GM_getResourceText
 // @require https://code.jquery.com/jquery-3.1.0.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 GM_addStyle(`
@@ -35,9 +40,10 @@ GM_addStyle(`
 .mDiv_inner{overflow-y: auto;max-height: 300px;}
 .mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}
 
-.mDiv_title.no_vis{filter: grayscale(1) brightness(1.5);}
+.mDiv_title.no_vis{filter: grayscale(1) brightness(1.5) !important;}
 .mDiv_title.opens{display:none;filter: hue-rotate(-40deg);}
 .mDiv_title.fav{filter:  hue-rotate(200deg);}
+.mDiv_title.stream{filter:  hue-rotate(120deg);}
 
 .com_Style{background: linear-gradient(#b7b7b7,#545454);color: white;text-align: center;padding: 4px;cursor: pointer;user-select: none; width: 300px;margin: 0 auto;border-radius: 8px;transition: all 0.5s ease;margin-bottom: 10px;}
 .com_Style:hover {background: linear-gradient(#676666,#9e9e9e);width: 350px;transition: all 0.5s ease-out;font-size: 1.2em;}
@@ -56,10 +62,11 @@ div#my_content tr:hover { background-color: white;}
 .buttonsStyle:hover{background: linear-gradient(#2fc12f,#246318);}
 div.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}
 .mDiv_FavControl:hover{background: linear-gradient(#be0a2f,#bc8ec5);}
+.butSpoiler{cursor:pointer; width: 16px;}
 
 div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}
 div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}
-div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}
+div.seeEl div img:not(.butSpoiler) {box-shadow: 2px 2px 5px black;}
 .minipanel{display: table-cell;vertical-align: middle;padding: 5px;border-left: 1px dotted white;background: linear-gradient(#df99e8,#ff6400);}
 .minipanel:hover {background: linear-gradient(#d377de,#ff7000);}
 .minipanel:hover img{transition:1s all;transform: rotateX(360deg) !important;}
@@ -75,10 +82,11 @@ div.seeEl div img:not([id*='butSpoiler']) {box-shadow: 2px 2px 5px black;}
 .checkbox_Load:checked + label:after {left: 5px;content: 'ON';color: green;}
 .checkbox_Load:not(checked) + label:before {content: '';position: absolute;top: 2px;left: -28px;width: 60px;height: 20px;background: #ff6060;box-shadow: inset 0 2px 3px rgba(0,0,0,.2);}
 .checkbox_Load:not(checked) + label:after {content: 'OFF';position: absolute;top: 4px;left: -25px;width: 25px;height: 15px;background: #FFF;box-shadow: 0 2px 5px rgba(0,0,0,.3);transition: all .2s;}
-div.imgages_Load {display: table;color: #b40000;width: 85%;font-family: monospace;font-weight: bold;margin: 5px auto;}
+div.imgages_Load {display: table; border-collapse: collapse; color: #b40000;font-family: monospace;font-weight: bold;}
 .preLoadImagesCell{display: table-cell;height: 40px;vertical-align: middle;background: #fbf7f7;text-align: center;width: 40%;}
 .preLoadImagesRow{display:table-row;}
 .preLoadImagesRow #timoutTimeImages {width:50%;text-align: right;color: #00447f;font-family: monospace;font-weight: bold;}
+.splitter{border-top: 1px solid silver;}
 
 tr.gai td a[href='javascript:void(0);'], tr.tum td a[href='javascript:void(0);']{margin-right: 5px;}
 tr.gai td a[href='javascript:void(0);'] img, tr.tum td a[href='javascript:void(0);'] img, .box_buttons_inner a[href='javascript:void(0);'] img{transition:1s transform;}
@@ -102,6 +110,148 @@ tr.gai td a[href='javascript:void(0);'] img:hover, tr.tum td a[href='javascript:
 .mDiv_Popup_title_x:hover {color: yellow;}
 tr.backgr td > div {display: inline;}
 .blend_class{background-blend-mode: luminosity;background-color: #ffd74540;}
+/*---*/
+.pop_panel{
+margin-right: 5px;
+    position: relative;
+}
+.pop_elements {
+    position: absolute;
+    background: white;
+    padding: 6px;
+    text-align: center;
+    border: 1px solid silver;
+    top: -20px;
+    right: 50%;
+    width: max-content;
+    height: -webkit-fill-available;
+    border-radius: 6px;
+    box-shadow: 0px 2px 4px 0px silver;
+    display: none;
+}
+.pop_panel:hover > .pop_elements{
+    display: block;
+}
+
+.pop_elements a {
+    position: relative;
+    margin: 0px 10px;
+}
+.pop_elements a span {
+    position: absolute;
+    font-size: 5px;
+    top: 13px;
+    left: 50%;
+    transform: translate(-50%, 0px);
+    color: silver;
+}
+/*.pop_elements a[data-servname]:after {
+    content: attr(data-servname);
+    font-size: 8px;
+    text-decoration: none;
+}*/
+
+.service_splitter{
+    border-right: 2px dotted silver;
+    padding-right: 5px;
+}
+
+#torrentPlayer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid silver;
+    user-select: none;
+    font-family: monospace;
+    background: #ffffffcf;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    max-width: 35vw;
+}
+
+.torrentPlayer_video {
+  position: relative;
+  height: 0;
+  padding-bottom: 56.25%;
+  background: #000000d1;
+}
+
+.torrentPlayer_video iframe{
+   position: absolute;
+   width: 100%;
+   height: 100%;
+   top: 0;
+   left: 0;
+}
+
+.torrentPlayer_list {
+    color: #810c0c;
+    padding: 2px;
+    line-height: 2;
+    font-weight: bold;
+}
+
+.torrentPlayer_title {
+    background: black;
+    font-weight: bold;
+    text-align: center;
+}
+
+.torrentPlayer_info {}
+
+.torrentPlayer_close {
+    cursor: pointer;
+    position: absolute;
+    right: -12px;
+    top: -15px;
+    background: #c0c0c0e0;
+    border-radius: 100%;
+    padding: 10px;
+    z-index: 1;
+}
+.torrentPlayer_close:hover {
+    background: #939393de;
+}
+
+.torrentPlayer_playlist {
+    max-height: 200px;
+    overflow-y: scroll;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    margin: 2px;
+    padding: 4px;
+}
+
+.torrentPlayer_playlist li {
+cursor: pointer;
+    border: 1px solid #ffa302;
+    background: linear-gradient(45deg, #fed304, transparent);
+    border-radius: 4px;
+    padding: 0 6px;
+    margin: 2px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    word-break: break-all;
+}
+
+.torrentPlayer_playlist_item_title{
+    text-align: left;
+    border-right: 2px dotted orange;
+    width: 90%;
+}
+
+.torrentPlayer_playlist_item_title_item_size {
+padding: 0 3px;
+    width: 10%;
+    text-align: center;
+}
 `);
 
 /* sorted plugin jquery
@@ -122,10 +272,18 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
           no_image = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/no_image.png",
           favIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/yellow_heart.png",//"https://aminoapps.com/static/bower/emojify.js/images/emoji/yellow_heart.png",
           searchIcon = "https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/search_icon.png",
+          torrServIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACplBMVEVVVVVURkdYT1B1WD9KPT1SR0hORUYtISIsJCYrISIzIiIsIyVcOhotICJ8eXdeVlZWTE1QRkdLQUNQRkeZajbTeBlbU1RSSElGPT1DOjppTC93Uy5RSEhaU1VUTExLQkJANjdMQkJPQk5IPD4/NjU/NTVPQ05DOTs9MjM9MDE/NjVAODY3Ky03Kyw2Kis1KSo0KCkxJihDOzlDOjkxJyguJCQ3LC0fDg0wJSZANjY/NTYnHR4yJihANzlBODgiGR89LCNwSB9ZSDtLQ0I5Li8vJCUqHR7gfQBXNxstIiY2Kyw2LC0vIyUsICAfCQ1NRkRYVU9ZWlBMRkVWUEyAgXeXlo2fpJaeqJiolHC8hjliV0hjYVmRkIebnJKem5Shp5y3rIjhmTS7oXGXn5FjX1lZXE+apJGNi4RuaWVoYmKTh23kmS7WnEmrrZ+orJ6Zno9YWE6EjXuosp+rrqKMjoaFdmXmoDf3kw7TolnIp22uspyor5+EjntOSESapZGqsqGusqagm4a/fCf8kwf+kgHwlRnEq3qttaaprqCYn49OSURaVFChq5ers6KvsaeimoOqgEv0lhj4jwbJomGwuaqvuKipraCgppZaWVBaVVCrsqKusKanq5/Hj0L+lATGfiOGdmB8e3Kgp5irsKKgqJZbXFJQSkabp5KrtaKsrqXIrnf5lg3/kgDhhQ21jFCQj4SXnI6rsaFSTkeJlYCotKCtrJvNoFrnkyT4jgTJjD6EfHB1c22SlYmnrJ6Fh3xjZVqcqpOnq56xrZPimDPQlEKAdm2YmZGEgnt2dmybn5FhXFhxcmman5HKoFvUmkaurpmQj4l4c255d2+MlYNxcWiBa028ikGgnYagqpmgopaZmo+KjIBoaGBeW1dramNqZmFfWVb///9Brb7hAAAAT3RSTlMAAAAAAAAAAAAAAAAAAAI0h8PewkMID3bc/f3heA8Pk/mTAnb5+QI03If9/cPD3t7Dh/39hzTcAnb5+Q+T+fkPe+L8/dx2Dww9ht7ehzQC034NnwAAAAFiS0dE4V8Iz6YAAAAHdElNRQfnARcNDQ5t9QcVAAABG0lEQVQY0wEQAe/+AAABAg4PEBESEhMQFBUDAQAABAUWFxgZT1BRUhobHB0FBAAGHh8gU1RVVldYWVogIR4GACIjJFtcXV5fYGFiY2QlIyYAJyhlZmdoaWprbG1ub3AoJwApKnFyc3R1dnd4eXp7fCspACx9fn+AgYKDhIWGh4iJii0ALouMjY6PkJGSk5SVlpeYLgAvmYyam5ydnp+goaKjpKUvADCmp6ipqqusra6vsLFvsjAAMTKztLW2t7i5uru8vb4zNAA1Nr/AwcLDxMXGx8jJyjY1ADc4OcvMzc7P0NHS09Q6ODcABzs8PdXW19jZ2tvcPjw7BwAICT9AQULd3t/gQ0RFRgkIAAoLDEdISTBKSzBMTU4NCwoBwWbifpX7rQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMS0yM1QxMzoxMjo1MyswMDowMINE+WMAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDEtMjNUMTM6MTI6NTMrMDA6MDDyGUHfAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAxLTIzVDEzOjEzOjE0KzAwOjAwCyM7SgAAAABJRU5ErkJggg==",
+          torrServToAdd = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABDlBMVEVKr1BKrzBLr09Lrk9Mo0ZLrlF0w19Mrk5Lrk5PqkZMr1BLrlBMr05Mrk9avjNKrk5Lr1BCtGJHpUFLr045vlVNrE1Lrk9Krk9Lrk9Lrk9Lrk9Lrk9Mrk9Mr05Mr09Lrk9Lrk9Lrk9Lrk9Lrk9Mrk9Lrk9Lrk9Lrk9Lr09JrU5Lrk9Lr09Lrk9Lrk9Lrk9Lrk9Lrk9Lrk9Mrk9Lrk9LrlBLsE5Lrk9Mrk9Kr05Lrk9MrlBLrk5Mr09Lrk9IrU1Krk9TsVaJyoxTslZKrU5gt2Pq9utguGRIrUxft2Lt9+7u9+5guGNSsVZet2JdtmFxv3Tv+O/v+PBywHWKyo3q9urt9+39/v1xv3Vft2P///+b6o0DAAAAPXRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkei3fncSgcajujrjRcarf6pFwaMB+nqSaH420lIBweoFxaLB0gHlFkjPAAAAAFiS0dEWZqy9BgAAAAJcEhZcwAAAOwAAADsAXkocb0AAAAHdElNRQfnARcNDQ5t9QcVAAAA0UlEQVQY02NgYGQSE5eQlJKSlpCRZWZhZWBjl5NXsAUDRSVlDk4GLhVVEMfODkioqWtwM2jKA1n2Do6OTvZAES1tBnEdoICzi6urmzOQoavHIAHiu3t4enm7g0T0GSRtbX18/fwDAoP8fH1sbaUZpGztgkNCA8LCAkJdg91tDTAFIFrCAwPDwVoMoYZGeHpGQA01UoRa6wK21pjBREsN6DAfR0cfsMNMGXiU1dXgTjcz52Xg47ew1IV4TlfLXECQgVWI2UpPX9rAwFDf2kZYRBQA9Mo2aHeqks0AAAAldEVYdGRhdGU6Y3JlYXRlADIwMjMtMDEtMjNUMTM6MTI6MjgrMDA6MDCLhqSAAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIzLTAxLTIzVDEzOjEyOjI4KzAwOjAw+tscPAAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyMy0wMS0yM1QxMzoxMzoxNCswMDowMAsjO0oAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC",
+          aceStreamIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACZFBMVEX//wD/+CL/////dFgAAAD/yf//6AP//wP/fVn/5a3//xFds8v//zOm//9izl8y03NXpbxmxeAA7/9CsZQA/xA+7JGD+v88/44w0XJft9Bu1PEAAAABAQDuVUH4WUT5WUTyVj0KAAAAAAEKBQD4fQD6egfxWzj9W0X+W0X+W0X/W0H6WkncVFsBAQEEAgDhcQD9fwD9gAD+Xz3+W0X+W0X+W0PRVXWdVM+eVNGdUsoSCQD9gAD+gAD6YzP+W0b/W0X/W0ONUNmcVNSdVdSdVdSdVdScVNOYUs36fgD+gAD+gAD7YzP9WkX5WUS6PA2OTMCcVNOdVdScVNOcVNOdVdScVNP4gQL+gAD+gAD9gACKRridUtLoAMCAOaecVNOdVdP1wiP3tBz+fwD+gADjcgADAgA6fohGjJ1Hi50BfU2fS9GcVNP8xiT1wyTYeQbxhwcCBARIip1JjJ9IjJ5WgKX8xiX8xiT7xiT6xiQHBgFBfJBIi55JjJ9Ii55Ih5yUGKf8xiT9xyX9xyX8xiXyvCEhk08hoE9DjJRIi55Ji55JjJ/6xCT9xyT9xyX8xiTTuisipVsnplonp1smplonmlxEfJVJi55JjJ9HiZzqviX/xiP/xiAABjAmplomplpHiZxJjJ9Ji55DgpQ0plUjpVoaolwlpVonp1snp1snp1smpVlIi55Ji59Iip0BAgMdj08mplonp1onp1onp1omplompFkmplkwmG5Ii55Ii55Ii50KLxglolgmpVklolgSVS1GdpxIip5Ii55HiJsBAgIBAwE/e45FhpgAAQFJjJ8np1v///+JAouZAAAAyXRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQggIAsBAQEWGw5SmpFnPQsBAQZTTmy/skEUQYEjAWyDHsDXXRWe8fnNghkq1nIiQRcDCHrde6f0oRit9WIGNAEEctobGXKHBwEHaUQDFZZxHQYJAUDwnC/QZGJAAQmq/JUmAsHy9LQMBhMldcv5MM3njRQ/gLKbDAi88TITXCoBi3wq6LoNGUYwQuPo5DSO5kMBBV/E4tqPMlITZsJNAR0wGwIHRGMfAQEFCwGmiBL/AAAAAWJLR0QCZgt8ZAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAAd0SU1FB+cBFw0NDfT8Vq8AAAEbSURBVBjTARAB7/4AGxsbHBsAAQIDHR4fICEiGwAbGyMEACQlJicoKSorLAQtABsuBC8wMTIzNDU2Nzg5BQIAGxs6Ozw9Pj9AQUJDREVGRwAbBkhJSktMTU5PUFFSU1RVAAdWV1hZBAgJGwRaW1xdXl8AYGFiY2QEZRsbBGZnaGlqawBsbW5vCiMbG3ALcXJyc3RbAHV2d3gMeRsEDXp7yXx9fn8AgIGCg4QOD4WGh4iJinEQGwCLjI2Oj5CRkpOUlZaXmBEbAJmamxKcncrKnhOfoKGiBBsAo6Slpp2nqKmqFKusrRGuGwCvsLGys7S1tre4uboEGxsbAAS7vL2+vxXAwcLDFhvEGxsAxRsXGBcEG8bHGRobyBsbG5hpVpaCHPp+AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTAxLTIzVDEzOjEyOjI4KzAwOjAwi4akgAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wMS0yM1QxMzoxMjoyOCswMDowMPrbHDwAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjMtMDEtMjNUMTM6MTM6MTMrMDA6MDDOhAXEAAAAAElFTkSuQmCC",
+
+
+          images_ = [image_arrow,no_image,favIcon,searchIcon,torrServIcon],
 
           hostname = location.origin,
 
-          debug = 0;
+          debug = 0,
+          torr_serv_port = 8090,
+          acestream_port = 6878
 
     var ObjSave = null,
         TimeOutImages = 5;
@@ -431,7 +589,14 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                     MiniPanel(param);
                 }
 
-                $(".mDiv_title.opens").text(`Открытые (${$(".seeEl").length})`);
+                const lenSee = $(".seeEl").length
+                if(lenSee>0){
+                    $("#hideAll").fadeIn('fast')
+                } else {
+                    $("#hideAll").fadeOut('fast')
+                }
+
+                $(".mDiv_title.opens").text(`Открытые (${lenSee})`);
 
                 // Back offset on page
                 //if(event_el !== "minipanel") $('html, body').animate({scrollTop:$(elem).offset().top}, 500, 'swing');
@@ -638,6 +803,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
     }
 
     function updateFav(){
+        if(!ObjSave.options?.settings_visible?.fav) return
+
         if (ObjSave.hasOwnProperty('favorites')){
             if(ObjSave.favorites.length > 0){
                 $(".mDiv_FavInner").empty();
@@ -682,15 +849,28 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         if(!document.getElementById("sidebar")) return;
 
         if (!ObjSave.options.hasOwnProperty('settings_visible')){
-            ObjSave.options.settings_visible = true
+            ObjSave.options.settings_visible = {
+                sett:true,
+                fav:true,
+                opens:true,
+                stream:true
+            }
+        } else if(typeof ObjSave.options.settings_visible == 'boolean'){
+            ObjSave.options.settings_visible = {
+                sett:true,
+                fav:true,
+                opens:true,
+                stream:true
+            }
         }
+        if(debug)console.log('Menu show-hide: ',ObjSave.options.settings_visible)
 
-        var hostisT = searchinHost("/torrent/"),
+        let hostisT = searchinHost("/torrent/"),
             settings_visible = ObjSave.options.settings_visible,
             div = $('<div class="mDiv">'+
-                    (!hostisT?'<div class="mDiv_title'+(settings_visible?'':' no_vis')+'">Настройки</div>'+
-                     '<div class="mDiv_settings_body" style="'+(settings_visible?'display: block':'display: none')+'">'+
-                     '<div id="hideAll" class="buttonsStyle">Свернуть все</div>'+
+                    (!hostisT?
+                     '<div class="mDiv_title'+(settings_visible.sett?'':' no_vis')+' sett">Настройки</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '<div class="preLoadImagesRow">'+
                      '<div class="preLoadImagesCell">Предзагрузка: </div>'+
@@ -700,36 +880,64 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="preLoadImagesCell">Тайм-аут загр.</div>'+
                      '<div class="preLoadImagesCell"><input type="number" id="timoutTimeImages" title="Тайм-аут загрузки изображений.\nЕсли 0, то тайм-аут устанавл. настройкой браузера!" min="0" step="0.1"> сек.</div>'+
                      '</div>'+
-                     '</div>':'<div class="mDiv_title'+(settings_visible?'':' no_vis')+'">Настройки</div>'+
-                     '<div class="mDiv_settings_body" style="'+(settings_visible?'display: block':'display: none')+'">')+
-                    '<div class="mDiv_title opens">Открытые</div>'+
-                    '<div class="mDiv_inner"></div>'+
-                    '<div class="mDiv_title fav">Избранное</div>'+
-                    '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
-                    '<div class="mDiv_FavInner"></div>'+
-                    '</div>'+
-                    '</div>'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.stream?'':' no_vis')+' stream">Torrent Stream</div>'+
+                     '<div class="mDiv_settings_body imgages_Load" style="'+(settings_visible.stream?'display: block':'display: none')+'">'+
+                     '<div class="preLoadImagesRow">'+
+                     '<div class="preLoadImagesCell">TorrServer Ip:Port</div>'+
+                     '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="torr_server_address" data-service="TorrServer" title="TorrServer адресс и порт" value="localhost:8090"></div>'+
+                     '</div>'+
+                     '<div class="preLoadImagesRow">'+
+                     '<div class="preLoadImagesCell">AceStream Ip:Port</div>'+
+                     '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="acestream_server_address" data-service="AceStream" title="AceStream адресс и порт" value="localhost:6878"></div>'+
+                     '</div>'+
+                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀) и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a>.</div>'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.opens?'':' no_vis')+' opens">Открытые</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.opens?'display: block':'display: none')+'">'+
+                     '<div id="hideAll" class="buttonsStyle">Свернуть все</div>'+
+                     '<div class="mDiv_inner"></div>'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.fav?'':' no_vis')+' fav">Избранное</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.fav?'display: block':'display: none')+'">'+
+                     '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
+                     '<div class="mDiv_FavInner"></div>'+
+                     '</div>'+
+                     '</div>': /* One torrent */
+                     '<div class="mDiv_title'+(settings_visible.sett?'':' no_vis')+' sett">Настройки</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
+                     '<div id="preLoadImages" class="imgages_Load">'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.stream?'':' no_vis')+' stream">Torrent Stream</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.stream?'display: block':'display: none')+'">'+
+                     '<div class="preLoadImagesRow" style="color:#b40000;">'+
+                     '<div class="preLoadImagesCell">TorrServer Ip:Port</div>'+
+                     '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="torr_server_address" data-service="TorrServer" title="TorrServer адресс и порт" value="localhost:8090"></div>'+
+                     '</div>'+
+                     '<div class="preLoadImagesRow">'+
+                     '<div class="preLoadImagesCell">AceStream Ip:Port</div>'+
+                     '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="acestream_server_address" data-service="AceStream" title="AceStream адресс и порт" value="localhost:6878"></div>'+
+                     '</div>'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.opens?'':' no_vis')+' opens">Открытые</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.opens?'display: block':'display: none')+'">'+
+                     '<div id="hideAll" class="buttonsStyle">Свернуть все</div>'+
+                     '<div class="mDiv_inner"></div>'+
+                     '</div>'+
+                     '<div class="mDiv_title'+(settings_visible.fav?'':' no_vis')+' fav">Избранное</div>'+
+                     '<div class="mDiv_settings_body" style="'+(settings_visible.fav?'display: block':'display: none')+'">'+
+                     '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
+                     '<div class="mDiv_FavInner"></div>'+
+                     '</div>'+
+                     '</div>'+
+                     '</div>'+
+                     '</div>')+
                     '</div>'),
 
             chechVal = "";
-        if (ObjSave.hasOwnProperty('options')){
-            if (ObjSave.options.hasOwnProperty('preload')) chechVal = ObjSave.options.preload;
+        if (ObjSave.hasOwnProperty('options') && ObjSave.options.hasOwnProperty('preload')){
+            chechVal = ObjSave.options.preload;
         }
-
-        $(div).find(".mDiv_title").click(function(){
-            const settings_body = $('.mDiv_settings_body')
-            if (settings_body.css('display') == 'none'){
-                settings_body.slideDown('slow')
-                ObjSave.options.settings_visible = true
-                $(this).removeClass('no_vis')
-
-            } else {
-                settings_body.slideUp('slow')
-                ObjSave.options.settings_visible = false
-                $(this).addClass('no_vis')
-            }
-            saveToStorage();
-        })
 
         $(div).find("#checkbox_imgages_Load").change(function(){
             if(debug) console.log("Предзагрузка: ",$(this)[0].checked);
@@ -755,7 +963,59 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             }
         }).val((ObjSave.options.TimeOutLoadImages)?ObjSave.options.TimeOutLoadImages:5);
 
+        // TorrServ & AceStream
+
+        $(div).find("#torr_server_address, #acestream_server_address").on('change',function(){
+            let valueInput = $(this).val(),
+                service = this.dataset.service,
+                options_service_name = service === 'TorrServer' ? ['torr_server_address', torr_serv_port] : ['acestream_server_address', acestream_port],
+                checkAddr = valueInput.match(/(localhost|\b\d{1,3}\b\.\b\d{1,3}\b\.\b\d{1,3}\b\.\b\d{1,3}\b)\:\b(\d+)\b/g),
+                prevVal = $(this).data('preVal')
+
+            if(!checkAddr) {
+                alert(`Адресс ${service}\'а указан неверно!`)
+                $(this).val(prevVal ? prevVal : 'localhost:'+options_service_name[1])
+                return;
+            }
+
+            $(this).data('preVal', valueInput)
+
+            if (ObjSave.hasOwnProperty('options')){
+                ObjSave.options[options_service_name[0]] = checkAddr && checkAddr.length==1 ? checkAddr[0] : 'localhost:'+options_service_name[1];
+            }
+            saveToStorage();
+
+        }).val(function(index, value){
+            const options_service_name = this.dataset.service === 'TorrServer' ? ['torr_server_address', torr_serv_port] : ['acestream_server_address', acestream_port]
+            return ObjSave.options[options_service_name[0]] ? ObjSave.options[options_service_name[0]] : 'localhost:'+options_service_name[1]
+        })
+
         $("#sidebar").append(div);
+
+        $("#sidebar .mDiv").click(function(event){
+            const target = event.target
+            if(target.classList.contains('mDiv_title') /*&& !target.classList.contains('sett')*/){
+                const nameSp = target.classList[target.classList.length-1],
+                      settings_body = $(target.nextElementSibling),
+                      $traget = $(target)
+
+                if (settings_body.css('display') == 'none'){
+                    if(nameSp === 'fav' && $('.mDiv_FavInner').children().length === 0) updateFav()
+                    settings_body.slideDown('slow')
+                    ObjSave.options.settings_visible[nameSp] = true
+                    $traget.removeClass('no_vis')
+
+                } else {
+                    settings_body.slideUp('slow')
+                    ObjSave.options.settings_visible[nameSp] = false
+                    $traget.removeClass(nameSp)
+                    $traget.addClass('no_vis')
+                    $traget.addClass(nameSp)
+                }
+                saveToStorage();
+            }
+
+        })
 
         if(ObjSave.hasOwnProperty('favorites') && Object.keys(ObjSave.favorites).length > 0) {
             $(".mDiv_FavInner").fadeIn('slow');
@@ -777,16 +1037,18 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
         $("#hideAll").click(function(){
             if($(".my_tr:visible").length){
-                $(".my_tr").fadeOut("slow");
-                $("img[id^='butSpoiler_'").css("transform", "scaleY(1)").attr("title","Показать раздачу");
-                $(".mDiv_title.opens").text('Открытые');
+                $(".my_tr").fadeOut("slow", function(){
+                    $("img.butSpoiler").css("transform", "scaleY(1)").attr("title","Показать раздачу");
 
-                // Remove see
-                $(".mDiv_title.opens").hide();
-                $(".mDiv_inner").empty();
+                    // Remove see
+                    $("#hideAll").fadeOut("fast", function(){
+                        $(".mDiv_title.opens").hide();
+                        $(".mDiv_inner").empty();
+                    });
 
+                });
             }
-        });
+        }).hide();
 
         $(".mDiv_FavControl").click(revomeFavAll);
 
@@ -852,6 +1114,242 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         )
     }
 
+    function convertSizes(bytes, poslezap = 2){
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024,
+              dm = poslezap < 0 ? 0 : poslezap,
+              sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+              i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(poslezap)) + ' ' + sizes[i];
+    }
+
+    // -- TorrServer
+    function checkRunningService(params){}
+
+    function requestTorrentService(params){
+
+        const method = params.method ? params.method : 'GET',
+              data = method == 'POST' && params.data ? params.data : ''
+
+        return new Promise((resolve, reject)=>{
+
+            GM.xmlHttpRequest({
+                method: method,
+                url: params.url,
+                data: data,
+                responseType: 'json',
+                headers : { 'Content-type' : 'application/json' },
+                onload: function(res) {
+                    if(res.status == 200 && res.statusText == 'OK'){
+                        resolve({status:'OK', data: res.response})
+                    } else if(res.status == 403) {
+                        resolve({status: 'error_403'})
+                    } else {
+                        reject(`[Status ${res.status}] Запрос вернул ошибку...`)
+                    }
+                },
+                onerror: function(e){
+                    reject('[Request] Запрос вернул ошибку...')
+                }
+            })
+        })
+    }
+
+    async function torrServAction(down, torr_server_address, save=true){
+        try{
+            const issave = save ? '&save' : '',
+                  {status, data} = await requestTorrentService({url: `http://${torr_server_address}/stream/fname?link=${down}${issave}&stat`})
+
+            if(status == 'OK'){
+                return data
+            } else if(status == 'error_403') {
+                showMessage('ОШИБКА',`<p style='color:red; font-weight: bold;'>Запрошенный URL не может быть получен, проверьте работает ли TorServer!</p>`)
+                return null
+            }
+        }
+        catch(ev) {
+            showMessage('ОШИБКА',`<p style='color:red; font-weight: bold;'>TorrServ не работает (адрес <span style='color: blue;'>${torr_server_address}</span>) или ошибка в коде!</p><p>Текст ошибки: '${ev}'</p>`)
+        }
+    }
+
+    function returnIframe(v,addr,v_name,vhash,vindex=1,){
+        v.empty()
+        //const isvideo = /\.(?:mp4|mkv|avi|m3u8)$/g.test(v_name) ? {style: 'position: absolute; width: 100%;height: 100%;top: 0;left: 0;border:none;'} : {style: 'width:100%;border:none;overflow:hidden;'},
+        const addr_path = encodeURIComponent(`http://${addr}/stream/fname?link=${vhash}`),
+              serverHTTP = 'http://localhost:8000/frame' // 'http://alekpet.pythonanywhere.com/getvideo' // http://localhost:8000/frame
+        return `<iframe src="${serverHTTP}?path_vid=${addr_path}&name_vid=${encodeURIComponent(v_name)}&index_vid=${vindex}" frameborder="0" scrolling="no"  />` //style="${isvideo.style}"
+    }
+
+    async function torrServer(params){
+
+        const {down, magn, linkText, action='add'} = params,
+              torr_server_address = $("#torr_server_address").val()
+
+        if(!torr_server_address){
+            alert(`Адрес TorrServer\'а '${torr_server_address}' указан неверно!`)
+            return
+        }
+
+        try{
+            if(action == 'add'){
+                if(confirm(`Добавить "${linkText}" для проигрывания в torrServ?`)){
+                    const data = await torrServAction(magn, torr_server_address)
+                    if(data){
+                        showMessage('УСПЕШНО',`<p style='color:green;'><b>Торрент был сохранен в TorServer!</b></p>
+                                        <p><b>Название:</b> ${data.title || data.name}</p>
+                                        <p><b>Размер:</b> ${convertSizes(data.torrent_size)}</p>`)
+                    }
+                }
+            } else if(action == 'play'){
+                const data = await torrServAction(magn, torr_server_address, false)
+                if(data){
+                    if(confirm('Запустить проигрыватель?')){
+
+                        let videos = data.file_stats.filter((elem, idx)=> /.(avi|mp4|mkv|mp3)/g.test(elem.path)),
+                            boxPlayer = $('#torrentPlayer'),
+                            close_vid,inner_vid,inner_list,vid_info,vid_title = null
+
+                        if(boxPlayer.length) boxPlayer.remove()
+
+                        boxPlayer = $("<div></div>").attr('id','torrentPlayer')
+
+                        close_vid = $("<div class='torrentPlayer_close'>").attr('title','Закрыть').text('X').click(function(){
+                            boxPlayer.hide(()=>{
+                                boxPlayer.remove()
+                            })
+                        })
+                        vid_title = $("<div class='torrentPlayer_title'>")
+                        vid_info = $("<div class='torrentPlayer_info'>").text('Загрузка...')
+                        inner_vid = $("<div class='torrentPlayer_video'>")
+                        inner_list = $("<div class='torrentPlayer_list'>")
+
+                        vid_title.append(vid_info,close_vid)
+
+                        boxPlayer.append(vid_title,inner_vid,inner_list)
+                        $('body').append(boxPlayer)
+
+                        if(videos.length){
+                            let frame = returnIframe(inner_vid, torr_server_address, videos[0].path, data.hash)
+                            inner_vid.append(frame)
+
+                            let ulpl = $("<ul class='torrentPlayer_playlist'></ul>")
+                            vid_info.text(videos[0].path)
+
+                            for(let [k,v] of videos.entries()){
+                                let li = $("<li></li>").click(function(){
+                                    let frame = returnIframe(inner_vid, torr_server_address, v.path, data.hash, v.id)
+                                    inner_vid.html(frame)
+                                    vid_info.text(v.path)
+                                }),
+                                    title_item_list = `${k+1}. ${v.path}`,
+                                    name_vid = $("<span class='torrentPlayer_playlist_item_title'>").text(title_item_list),
+                                    size_vid = $("<span class='torrentPlayer_playlist_item_size'>").text(convertSizes(v.length))
+
+                                li.append(name_vid,size_vid)
+                                ulpl.append(li)
+                            }
+
+                            inner_list.append(ulpl)
+                        }
+                    }
+                }
+            }
+        } catch(ev) {
+            showMessage('ОШИБКА',`<p style='color:red; font-weight: bold;'>Текст ошибки: '${ev}'</p>`)
+        }
+    }
+    // -- TorrServer
+
+    // -- AceStream
+    async function AceStreamAction(down, acestream_server_address, save=true){
+        try{
+            const issave = save ? '&save' : '',
+                  {status, data} = await requestTorrentService({url: `http://${acestream_server_address}/server/api?method=get_api_access_token`})
+
+            if(status == 'OK'){
+                return data.result
+            } else if(status == 'error_403') {
+                showMessage('ОШИБКА',`<p style='color:red; font-weight: bold;'>Запрошенный URL не может быть получен, проверьте работает ли AceStream!</p>`)
+                return null
+            }
+        }
+        catch(ev) {
+            showMessage('ОШИБКА',`<p style='color:red; font-weight: bold;'>AceStream не работает (адрес <span style='color: blue;'>${acestream_server_address}</span>) или ошибка в коде!</p><p>Текст ошибки: '${ev}'</p>`)
+        }
+    }
+
+    async function aceStreamServer(params){
+        const {down, magn, linkText, action='play'} = params,
+              acestream_server_address = $("#acestream_server_address").val()
+
+        if(!acestream_server_address){
+            alert(`Адрес AceStream\'а '${acestream_server_address}' указан неверно!`)
+            return
+        }
+
+        // http://127.0.0.1:6878/ace/getstream?url=http://d.rutor.info/download/894977
+        // http://127.0.0.1:6878/ace/manifest.m3u8?url=http://d.rutor.info/download/894977&format=json
+        // http://localhost:6878/server/api?method=get_api_access_token
+        const {token} = await AceStreamAction(magn, acestream_server_address, false)
+
+        if(token){
+            if(confirm('Запустить проигрыватель?')){
+
+                let videos = encodeURIComponent(`http://${acestream_server_address}/ace/getstream?url=${down}`),
+                    boxPlayer = $('#torrentPlayer'),
+                    close_vid,inner_vid,inner_list,vid_info,vid_title = null
+
+                if(boxPlayer.length) boxPlayer.remove()
+
+                boxPlayer = $("<div></div>").attr('id','torrentPlayer')
+
+                close_vid = $("<div class='torrentPlayer_close'>").text('X').click(function(){
+                    boxPlayer.hide(()=>{
+                        boxPlayer.remove()
+                    })
+                })
+                vid_title = $("<div class='torrentPlayer_title'>")
+                vid_info = $("<div class='torrentPlayer_info'>").text('Загрузка...')
+                inner_vid = $("<div class='torrentPlayer_video'>")
+                inner_list = $("<div class='torrentPlayer_list'>")
+
+                vid_title.append(vid_info,close_vid)
+
+                boxPlayer.append(vid_title,inner_vid,inner_list)
+                $('body').append(boxPlayer)
+
+                if(videos.length){
+                    inner_vid.empty()
+                    let frame = `<iframe src="http://localhost:8000/frame?path_vid=${videos}&name_vid=${encodeURIComponent(linkText)}&index_vid=${1}" frameborder="0" scrolling="no" style="width: 100%;height: 100%;" />`
+                    inner_vid.append(frame)
+
+                    let ulpl = $("<ul class='torrentPlayer_playlist'></ul>")
+                    vid_info.text(linkText)
+
+                    /*for(let v of videos){
+                        let li = $("<li></li>").click(function(){
+                            inner_vid.empty()
+                            let frame = `<iframe src="http://localhost:8000/frame?path_vid=${v}&name_vid=${encodeURIComponent(v)}&index_vid=${v}" frameborder="0" scrolling="no"/>`
+                            inner_vid.html(frame)
+                            vid_info.text(v)
+                        }),
+                            name_vid = $("<span class='torrentPlayer_playlist_item_title'>").text(v),
+                            size_vid = $("<span class='torrentPlayer_playlist_item_size'>").text(convertSizes(v.length))
+
+                        li.append(name_vid,size_vid)
+                        ulpl.append(li)
+                    }
+
+                    inner_list.append(ulpl)*/
+                }
+            }
+        }
+
+    }
+    // -- AceStream
+
     function addPoleInfo(){
         if(!searchinHost("/torrent/")){
 
@@ -863,27 +1361,27 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                 } else {
                     // Если нет получаем информацию
                     let elem = this,
-                        m_elem = this.children[1],
+                        m_elem = elem.children[1],
                         link, linkText, magn, down, count_magnet = 1,
 
-                        img = $('<img style="cursor:pointer;" title="Показать раздачу" id="butSpoiler_'+i+'" src="'+image_arrow+'" width="16px"></img>'),
-                        newI = $('<td style="text-align:center;"></td>').html(img);
+                        img = $('<img/>').attr({title:"Показать раздачу",class:"butSpoiler", src:image_arrow, alt:""}),
+                        newI = $('<td/>').css("text-align","center").append(img);
 
-                    /*if(searchinHost("/top")){
-                        count_magnet = 1
-                    }*/
                     if(m_elem.children[count_magnet] && m_elem.children[count_magnet].href.indexOf('magnet') == -1){
                         down = m_elem.children[1].href
                         link = m_elem.children[count_magnet] ? m_elem.children[count_magnet].href : null
-                        linkText = m_elem.children[count_magnet] ? m_elem.children[count_magnet].innerText : null
+                        linkText = m_elem.children[count_magnet] ? m_elem.children[count_magnet].textContent : null
                     } else {
                         down = m_elem.children[count_magnet-1].href
                         magn = m_elem.children[count_magnet] ? m_elem.children[count_magnet].href : null
                         link = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].href : null
-                        linkText = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].innerText : null
+                        linkText = m_elem.children[count_magnet+1] ? m_elem.children[count_magnet+1].textContent : null
                     }
 
-                    let favorite = $("<a href='javascript:void(0);' title='Добавить в избранное:\nИмя: "+linkText+"\nСсылка торрента: "+link+"\nDownload: "+down+"\nMagnet: "+(magn ? magn : 'Нет')+"' class='downgif'><img src='"+favIcon+"' width='13' alt=''></a>").click(function(ev){
+                    let favorite = $("<a/>")
+                    .attr({href:'javascript:void(0);', title:`Добавить в избранное:\nИмя: ${linkText}\nСсылка торрента: ${link}\nDownload: ${down}\nMagnet: ${(magn ? magn : 'Нет')}`, class:'downgif'})
+                    .append($("<img/>").attr({src:favIcon, width:'13',alt:''}))
+                    .click(function(ev){
                         ev.stopPropagation()
                         addFav({
                             el:this,
@@ -894,15 +1392,53 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                             date_time: new Date().getTime()
                         });
                     }),
-                        search = $("<a href='javascript:void(0);' title='Искать: "+linkText+"' class='downgif'><img src='"+searchIcon+"' width='13' alt=''></a>").click(function(ev){
-                            ev.stopPropagation()
-                            let searchText = searchEditReq(linkText);
-                            window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
-                        });
+                        search = $("<a/>")
+                    .attr({href:'javascript:void(0);', title:`Искать: ${linkText}`, class:'downgif'})
+                    .append($("<img/>").attr({src: searchIcon, width:'13', alt:''}))
+                    .click(function(ev){
+                        ev.stopPropagation()
+                        let searchText = searchEditReq(linkText);
+                        window.location.href = hostname+"/search/"+encodeURIComponent(searchText);
+                    }),
+
+                        AceStreamServPlay = $("<a/>")
+                    .attr({href:'javascript:void(0);', title:`Проиграть в AceStream: ${linkText}`, class:'downgif service_splitter', 'data-servname':'AceStream'})
+                    .append($('<span/>').text('AceStream'))
+                    .append($("<img/>").attr({src: aceStreamIcon, width:'13', alt:''}))
+                    .click(function(ev){
+                        ev.stopPropagation()
+                        aceStreamServer({down, linkText, magn, action: 'play'})
+                    }) ,
+
+                        torrServPlay = $("<a/>")
+                    .attr({href:'javascript:void(0);', title:`Проиграть в torrserv: ${linkText}`, class:'downgif','data-servname':'TorrServ Play'})
+                    .append($('<span>').text('TorrServ Play'))
+                    .append($("<img/>").attr({src: torrServIcon, width:'13', alt:''}))
+                    .click(function(ev){
+                        ev.stopPropagation()
+                        torrServer({down, linkText, magn, action: 'play'})
+                    }),
+
+                        torrServ = $("<a/>")
+                    .attr({href:'javascript:void(0);', title:`Добавить в torrserv: ${linkText}`, class:'downgif','data-servname':'TorrServ Add'})
+                    .append($('<span/>').text('TorrServ Add'))
+                    .append($("<img/>").attr({src: torrServToAdd, width:'13', alt:''}))
+                    .click(function(ev){
+                        ev.stopPropagation()
+                        torrServer({down, magn, linkText})
+                    }),
+
+                        pop_items = $("<div class='pop_elements'></div>"),
+                        bufDiv = $("<a class='pop_panel'  onclick='event.stopPropagation();'><img src='https://www.pvsm.ru/images/2019/10/14/v-zakladki-PDF-i-ePUB-versiya-rukovodstva-po-React-3.png' width='15' alt=''/></a>").append(pop_items)
+                    pop_items.append(AceStreamServPlay,torrServPlay,torrServ)
+
 
                     // Image event
                     $(img).add(elem).click(async function(e) {
                         e.stopPropagation()
+
+                        //if(e.target.tagName == 'A') return true
+
                         if(!$(elem).next().is(".tr_loading")){
                             $(elem).after('<tr class="tr_loading" style="text-align:center; display:none;"><td colspan="6">'+
                                           '<div class="loading_tor_box">'+
@@ -917,8 +1453,17 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         }
                     });
 
+
+                    $(m_elem).on('click contextmenu',function(ev){
+                        const cur_ = ev.target
+                        if(cur_ && /download|magnet|torrent/.test(cur_.parentElement.href) || cur_.tagName == 'A'){
+                            ev.stopPropagation()
+                        }
+                    });
+
                     favorite.insertBefore(m_elem.children[0])
                     search.insertBefore(m_elem.children[0])
+                    bufDiv.insertBefore(m_elem.children[0])
                     newI.prependTo(this);
                 }
             });
@@ -926,8 +1471,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             const poleDown = $("#download a"),
                   link = location.href,
                   linkText = $("#all > h1").text(),
-                  Down = poleDown.eq(1).attr('href'),
-                  Mdow = poleDown.eq(0).attr('href'),
+                  down = poleDown.eq(1).attr('href'),
+                  magn = poleDown.eq(0).attr('href'),
 
                   box_buttons = $("<div class='box_buttons_inner'></div>").insertAfter(poleDown.eq(1)),
 
@@ -936,18 +1481,47 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                           el:this,
                           link:link,
                           linkText:linkText,
-                          Down:Down,
-                          Mdown:Mdow,
+                          Down:down,
+                          Mdown:magn,
                           date_time: new Date().getTime()
                       });
                   }),
                   search = $("<a href='javascript:void(0);' style='margin-left:10px;' title='Искать: "+linkText+"'><img src='"+searchIcon+"' width='15'></a>").click(function(){
                       let searchText = searchEditReq(linkText);
                       window.location.href = hostname + "/search/"+encodeURIComponent(searchText);
-                  })
+                  }),
+
+                  AceStreamServPlay = $("<a/>")
+            .css('margin-left','10px')
+            .attr({href:'javascript:void(0);', title:`Проиграть в AceStream: ${linkText}`})
+            .append($("<img/>").attr({src: aceStreamIcon, width:'15', alt:''}))
+            .click(function(ev){
+                ev.stopPropagation()
+                aceStreamServer({down, linkText, magn, action: 'play'})
+            }) ,
+                  torrServPlay = $("<a/>")
+            .css('margin-left','10px')
+            .attr({href:'javascript:void(0);', title:`Проиграть в torrserv: ${linkText}`})
+            .append($("<img/>").attr({src: torrServIcon, width:'15', alt:''}))
+            .click(function(ev){
+                ev.stopPropagation()
+                torrServer({down, linkText, magn, action: 'play'})
+            }),
+
+                  torrServ = $("<a/>")
+            .css('margin-left','10px')
+            .attr({href:'javascript:void(0);', title:`Добавить в torrserv: ${linkText}`})
+            .append($("<img/>").attr({src: torrServToAdd, width:'15', alt:''}))
+            .click(function(ev){
+                ev.stopPropagation()
+                torrServer({down, magn, linkText})
+            })
 
             favorite.appendTo(box_buttons)
             search.appendTo(box_buttons)
+            torrServPlay.appendTo(box_buttons)
+            torrServ.appendTo(box_buttons)
+            AceStreamServPlay.appendTo(box_buttons)
         }
     }
 
@@ -1030,17 +1604,19 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         if(currentObj.link.includes("http://")){
                             if(debug) console.log("Link содержит http!: ", currentObj.link)
                             try{
-                                torrentId = currentObj.link.match(/.*torrent\/(\d+)\//i)[1];
+                                torrentId = currentObj.link.match(/(\d+)\/?/i)[1];
                             } catch(e){
-                                torrentId = currentObj.link
+                                torrentId = currentObj.link//.match(/(\d+)/i)[1]
+                                console.log('Remake Favorite no find ID', currentObj.link)
                             }
                             currentObj.link = `${hostname}/torrent/${torrentId}`
-
                         }
+
                         if(currentObj.Down.includes("http://")){
                             if(debug) console.log("Down содержит http!: ", currentObj.Down)
                             currentObj.Down = `http://d.${location.hostname}/download/${torrentId}`
                         }
+
                         if(debug) console.log('New link and download:', currentObj)
                     }
 
@@ -1137,7 +1713,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             titles = $(this).find(".backgr > td").each(function(idxel, el){
 
                 if(idxel == 0) return true
-                if(idxel == 4 && el.innerText == "Пиры"){
+                if(idxel == 4 && el.textContent == "Пиры"){
                     let img = $("<img>").attr({"src":"https://raw.githubusercontent.com/AlekPet/Rutor-Preview-Ajax/master/assets/images/arrow_icon.gif","width":"15"}).css({"position": "relative","top":"3px","cursor": "pointer"}).attr({"title":"Сортировать по Раздающим","id":"_Up"}),
                         img_clone = img.clone(false).attr({"title":"Сортировать по Качающим","id":"_Down"})
                     $(el).css({"width": "90px"}).append($("<div>").text(" Р",).css({"cursor": "pointer"}).attr({"title":"Сортировать по Раздающим","id":"_Up"}),
@@ -1202,17 +1778,17 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
                     let colR, colU, size
                     if(this.children.length == 5){
-                        colR = this.children[4].children[0].innerText
-                        colU = this.children[4].children[2].innerText
-                        size = this.children[3].innerText
+                        colR = this.children[4].children[0].textContent
+                        colU = this.children[4].children[2].textContent
+                        size = this.children[3].textContent
                     } else{
-                        colR = this.children[5].children[0].innerText
-                        colU = this.children[5].children[2].innerText
-                        size = this.children[4].innerText
+                        colR = this.children[5].children[0].textContent
+                        colU = this.children[5].children[2].textContent
+                        size = this.children[4].textContent
                     }
 
                     // Date
-                    let dateT = this.children[1].innerText
+                    let dateT = this.children[1].textContent
                     dateT = dateT.split(/\s+/)
 
                     $.each(month, function(idx,val){
@@ -1238,7 +1814,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         }
                     })
 
-                    let nameSorti = this.children[2].children[4].innerText
+                    let nameSorti = this.children[2].children[5].textContent
                     if(!nameSorti || nameSorti.length == 0) nameSorti = this.children[2].children[0].getAttribute('title');
 
                     objCat.razd.push({es:this, date:dateT, name:nameSorti, size:complSize, up:colR, down:colU})
@@ -1256,21 +1832,25 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             $(".sideblock2").remove();
         }
 
-        let jquery = document.createElement('script')
-        jquery.type = "text/javascript"
-        jquery.src = 'https://code.jquery.com/jquery-3.1.0.min.js'
-        document.head.appendChild(jquery)
+        $(['https://code.jquery.com/jquery-3.1.0.min.js','https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js']).each(function(){
+            let jquery = document.createElement('script')
+            jquery.type = "text/javascript"
+            jquery.src = this
+            document.head.appendChild(jquery)
+        })
+
     }
 
     function init(){
         //setTimeout(function(){
-        AdBlock();
+        //AdBlock();
         loadStorage();
         makePanel();
         addPoleInfo();
         remakeFav();
         updateFav();
         sorting();
+
         //if(searchinHost("/top/")) sorting(); // using jquery.tablesorter on site, run only TOP category
         //}, 500);
     }
@@ -1307,5 +1887,24 @@ setTimeout(function() {sotrdgts();}, 200);
             init();
         }
     });*/
+
+    /*window.onload = function(){
+
+        let scripts = [
+            'https://vjs.zencdn.net/7.20.3/video.min.js',
+            'https://cdn.jsdelivr.net/npm/@videojs/http-streaming@2.15.0/dist/videojs-http-streaming.min.js'
+        ],
+            body = document.querySelector('body')
+
+        for(let s of scripts){
+            let script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.charset = 'utf-8'
+            script.src = s
+            body.appendChild(script)
+        }
+    }*/
+
     init()
+
 })();
