@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.7
+// @version      1.4.6.8
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -77,7 +77,7 @@ div.seeEl div img:not(.butSpoiler) {box-shadow: 2px 2px 5px black;}
 .loading_tor_text{height: inherit;width: 0%;background: linear-gradient(#1dff60, #00b327);border-radius: 8px;color: #676767;font-size: 1em;padding: 2px;}
 
 .checkbox_Load:not(checked) {opacity: 0;}
-.checkbox_Load + label {cursor: pointer;position: absolute;left: 70%;}
+.checkbox_Load + label {cursor: pointer;position: absolute;left: 35%;}
 .checkbox_Load:checked + label:before {background: #53d64c;}
 .checkbox_Load:checked + label:after {left: 5px;content: 'ON';color: green;}
 .checkbox_Load:not(checked) + label:before {content: '';position: absolute;top: 2px;left: -28px;width: 60px;height: 20px;background: #ff6060;box-shadow: inset 0 2px 3px rgba(0,0,0,.2);}
@@ -874,7 +874,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '<div class="preLoadImagesRow">'+
                      '<div class="preLoadImagesCell">Предзагрузка: </div>'+
-                     '<div class="preLoadImagesCell"><input type="checkbox" class="checkbox_Load" id="checkbox_imgages_Load"><label for="checkbox_imgages_Load"></label></div>'+
+                     '<div class="preLoadImagesCell" style="position:relative;"><input type="checkbox" class="checkbox_Load" id="checkbox_imgages_Load"><label for="checkbox_imgages_Load"></label></div>'+
                      '</div>'+
                      '<div class="preLoadImagesRow">'+
                      '<div class="preLoadImagesCell">Тайм-аут загр.</div>'+
@@ -909,7 +909,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.stream?'':' no_vis')+' stream">Torrent Stream</div>'+
-                     '<div class="mDiv_settings_body" style="'+(settings_visible.stream?'display: block':'display: none')+'">'+
+                     '<div class="mDiv_settings_body imgages_Load" style="'+(settings_visible.stream?'display: block':'display: none')+'">'+
                      '<div class="preLoadImagesRow" style="color:#b40000;">'+
                      '<div class="preLoadImagesCell">TorrServer Ip:Port</div>'+
                      '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="torr_server_address" data-service="TorrServer" title="TorrServer адресс и порт" value="localhost:8090"></div>'+
@@ -918,6 +918,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="preLoadImagesCell">AceStream Ip:Port</div>'+
                      '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="acestream_server_address" data-service="AceStream" title="AceStream адресс и порт" value="localhost:6878"></div>'+
                      '</div>'+
+                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀) и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a>.</div>'+
+
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.opens?'':' no_vis')+' opens">Открытые</div>'+
                      '<div class="mDiv_settings_body" style="'+(settings_visible.opens?'display: block':'display: none')+'">'+
