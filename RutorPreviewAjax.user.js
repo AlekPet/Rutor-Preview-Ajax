@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.8
+// @version      1.4.6.9
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -60,9 +60,16 @@ div#my_content tr:hover { background-color: white;}
 
 .buttonsStyle {border: 1px solid;width: 80%;margin: 3px auto;background: linear-gradient(#72ff72,#1d8e08);padding: 5px;cursor: pointer;}
 .buttonsStyle:hover{background: linear-gradient(#2fc12f,#246318);}
-div.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}
+.mDiv_FavControl{background: linear-gradient(#5a0067,#815f87);}
 .mDiv_FavControl:hover{background: linear-gradient(#be0a2f,#bc8ec5);}
+.mDiv_FavControlCheck{background: linear-gradient(#336700,#6e875f);}
+.mDiv_FavControlCheck:hover{background: linear-gradient(#07a116,#347036);}
 .butSpoiler{cursor:pointer; width: 16px;}
+.mDivFavControl_box{
+    display: flex;
+    margin: 0 20px;
+    font-size: 0.8rem;
+}
 
 div.seeEl {width: 80%;margin: 5px auto;background: linear-gradient(#e2a9d1,#ffc200);cursor: pointer;overflow: hidden;line-height: 1;font-size: 0.8em;    box-sizing: content-box;color: black; font-weight: bold;font-family: monospace;}
 div.seeEl:hover{background: linear-gradient(#ff9b58,#f5ff0082); color: #8e0000;}
@@ -251,6 +258,22 @@ cursor: pointer;
 padding: 0 3px;
     width: 10%;
     text-align: center;
+}
+.activExists:first-child:before {
+    content: attr(data-exists);
+    background: green;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: -10px;
+    writing-mode: vertical-lr;
+    text-orientation: upright;
+    color: wheat;
+    padding: 2px;
+    font-size: 0.7rem;
+}
+.activExistsRed:first-child:before{
+    background: red;
 }
 `);
 
@@ -644,11 +667,12 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             date_time = param.date_time,
             category = param.category,
             index = param.index,
+            isExists = param.object?.isExists == undefined ? '' : param.object?.isExists?'OK':'NO',
 
             searchText = searchEditReq(linkText),
 
             FavElTitleA = $('<a style="color: #005fb4;"></a>').attr({href:hostname+"/torrent/"+id, target:"_blank",title:linkText}).text(linkText),
-            FavElTitle = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;position:relative;"></div>').append(FavElTitleA,'<div class="class_category" style="position: absolute;top: -5px;left: 3px;color: #800047;font-size: 8px;font-weight: bold;background: #ffbbbb;padding: 0 5px;">'+category+'</div>'),
+            FavElTitle = $(`<div ${isExists?'class="activExists '+(isExists=='NO'? 'activExistsRed':'')+'" data-exists="'+isExists+'"':''} style="display: table-cell;vertical-align: middle;padding:5px; width: 80%;position:relative;"></div>`).append(FavElTitleA,'<div class="class_category" style="position: absolute;top: -5px;left: 3px;color: #800047;font-size: 8px;font-weight: bold;background: #ffbbbb;padding: 0 5px;">'+category+'</div>'),
             FavAddBlock = $('<div style="display: table-cell;vertical-align: middle;padding:5px; width: 10%; border-left: 1px dotted orange;">'+
                             '<div class="poleLinks"><a href="'+Down+'" target="_blank" title="Download"><img src="/s/i/d.gif" alt="Download"></a></div>'+
                             '<div class="poleLinks"><a href="'+Mdown+'" target="_blank" title="Magnet Link"><img src="/s/i/m.png" alt="Magnet Link"></a></div>'+
@@ -820,7 +844,8 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         Mdown: decodeURI(ObjFavCur.Mdown),
                         date_time: ObjFavCur.date_time,
                         category: ObjFavCur.category,
-                        index: pFav
+                        index: pFav,
+                        object: ObjFavCur
                     });
                 }
             }
@@ -900,7 +925,10 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.fav?'':' no_vis')+' fav">Избранное</div>'+
                      '<div class="mDiv_settings_body" style="'+(settings_visible.fav?'display: block':'display: none')+'">'+
+                     '<div class="mDivFavControl_box">'+
                      '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
+                     '<div class="mDiv_FavControlCheck buttonsStyle" title="Проверить торренты">Проверить торренты</div>'+
+                     '</div>'+
                      '<div class="mDiv_FavInner"></div>'+
                      '</div>'+
                      '</div>': /* One torrent */
@@ -929,6 +957,10 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="mDiv_title'+(settings_visible.fav?'':' no_vis')+' fav">Избранное</div>'+
                      '<div class="mDiv_settings_body" style="'+(settings_visible.fav?'display: block':'display: none')+'">'+
                      '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
+                     '<div class="mDivFavControl_box">'+
+                     '<div class="mDiv_FavControl buttonsStyle" title="Очистить список избранного!">Очистить избранное</div>'+
+                     '<div class="mDiv_FavControlCheck buttonsStyle" title="Проверить торренты">Проверить торренты</div>'+
+                     '</div>'+
                      '<div class="mDiv_FavInner"></div>'+
                      '</div>'+
                      '</div>'+
@@ -1053,6 +1085,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         }).hide();
 
         $(".mDiv_FavControl").click(revomeFavAll);
+        $(".mDiv_FavControlCheck").click(torrentsFavoritesExists);
 
         appendSmokeAndPopUp()
     }
@@ -1553,6 +1586,42 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         return category_
     }
 
+    function torrentsFavoritesExists(){
+        if(!confirm('Проверить торренты в избранном?')) return
+        // Check torrent exists?
+        let promises = []
+        for(let obj in ObjSave.favorites){
+            let currentObj = ObjSave.favorites[obj],
+
+                p = new Promise((res,rej)=>{
+                    let v = currentObj.link.split('/')
+                    $.ajax({
+                        url: `/torrent/${v[v.length-1]}`,
+                        success:  (data) => {
+                            let result = data.includes('Раздача не существует!')?false:true
+                            return res({result, v:unescape(currentObj.linkText).trim()})
+                        },
+                        error: (e) => res({result: false, v})
+                    })
+                }).then((result_)=>{
+                    let {result, v} = result_
+                    currentObj.isExists = (typeof result === 'string' ? JSON.parse(result): result)
+                    return !result ? `Ссылка на торрент больше не существует: ${v}`: null
+                })
+            promises.push(p)
+        }
+
+        Promise.all(promises).then(values => {
+            let filter_vals = values.filter(v => v)
+            if(filter_vals.length){
+                alert(filter_vals.join('\n'))
+                console.log(`%c${filter_vals.join('\n')}`, 'color: orange;background:darkred;');
+                updateFav()
+            }
+        });
+
+    }
+
     async function remakeFav(){
         if (ObjSave.hasOwnProperty('favorites')){
             // Favorites object
@@ -1629,6 +1698,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         currentObj.category = category_
                     }
                     //----------
+
                 }
             }
             if(debug) console.log('После remakeFav:', ObjSave.favorites)
