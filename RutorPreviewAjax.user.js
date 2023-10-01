@@ -35,7 +35,7 @@
 // ==/UserScript==
 
 GM_addStyle(`
-.mDiv{width: 250px;border: 3px double #FFA302;/* right: 9px; */text-align: center;    color: white;max-height: 85vh;overflow-y: auto;}
+.mDiv{width: 250px;border: 3px double #FFA302;/* right: 9px; */text-align: center;    color: white;max-height: 90vh;overflow-y: auto;}
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00; cursor: pointer;}
 .mDiv_inner{width: 95%;overflow-y: auto;max-height: 300px;}
 .mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}
@@ -287,8 +287,6 @@ padding: 0 3px;
 .mDiv::-webkit-scrollbar-thumb {
     background: darkseagreen;
     box-shadow: inset 0 0 0px 2px rgb(38 175 13 / 44%);
-}
-  box-shadow: inset 0 0 0px 2px rgb(158 171 221);
 }
 `);
 
