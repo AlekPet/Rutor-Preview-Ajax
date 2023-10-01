@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.9
+// @version      1.4.6.9a
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -35,9 +35,9 @@
 // ==/UserScript==
 
 GM_addStyle(`
-.mDiv{width: 250px;border: 3px double #FFA302;/*right: 9px;*/text-align: center;color:white;}
+.mDiv{width: 250px;border: 3px double #FFA302;/* right: 9px; */text-align: center;    color: white;max-height: 85vh;overflow-y: auto;}
 .mDiv_title{background-image: url(/s/i/poisk_bg.gif);background-size: 40% 100%;padding: 5px;border-bottom: 2px solid #ffea00; cursor: pointer;}
-.mDiv_inner{overflow-y: auto;max-height: 300px;}
+.mDiv_inner{width: 95%;overflow-y: auto;max-height: 300px;}
 .mDiv_FavInner{overflow-y: auto;max-height: 300px; color: silver; width: 80%;margin: 0 auto;padding: 10px;}
 
 .mDiv_title.no_vis{filter: grayscale(1) brightness(1.5) !important;}
@@ -274,6 +274,21 @@ padding: 0 3px;
 }
 .activExistsRed:first-child:before{
     background: red;
+}
+.mDiv::-webkit-scrollbar {
+    width: 7px;
+}
+.mDiv::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+.mDiv::-webkit-scrollbar-track{
+    background: #caffd1;
+}
+.mDiv::-webkit-scrollbar-thumb {
+    background: darkseagreen;
+    box-shadow: inset 0 0 0px 2px rgb(38 175 13 / 44%);
+}
+  box-shadow: inset 0 0 0px 2px rgb(158 171 221);
 }
 `);
 
@@ -895,7 +910,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
             div = $('<div class="mDiv">'+
                     (!hostisT?
                      '<div class="mDiv_title'+(settings_visible.sett?'':' no_vis')+' sett">Настройки</div>'+
-                     '<div class="mDiv_settings_body" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
+                     '<div class="mDiv_settings_body mDiv_plugins" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '<div class="preLoadImagesRow">'+
                      '<div class="preLoadImagesCell">Предзагрузка: </div>'+
@@ -933,7 +948,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '</div>'+
                      '</div>': /* One torrent */
                      '<div class="mDiv_title'+(settings_visible.sett?'':' no_vis')+' sett">Настройки</div>'+
-                     '<div class="mDiv_settings_body" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
+                     '<div class="mDiv_settings_body mDiv_plugins" style="'+(settings_visible.sett?'display: block':'display: none')+'">'+
                      '<div id="preLoadImages" class="imgages_Load">'+
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.stream?'':' no_vis')+' stream">Torrent Stream</div>'+
