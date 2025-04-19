@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.6.9a
+// @version      1.4.7.0
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -173,17 +173,16 @@ margin-right: 5px;
     font-family: monospace;
     background: #ffffffcf;
     color: white;
-    display: flex;
+    display: flex
+;
     flex-direction: column;
-    justify-content: center;
-    align-content: center;
-    max-width: 35vw;
+    min-width: 640px;
 }
 
 .torrentPlayer_video {
   position: relative;
-  height: 0;
-  padding-bottom: 56.25%;
+  width: 100%;
+  height: 100%;
   background: #000000d1;
 }
 
@@ -206,6 +205,7 @@ margin-right: 5px;
     background: black;
     font-weight: bold;
     text-align: center;
+    padding: 10px;
 }
 
 .torrentPlayer_info {}
@@ -246,6 +246,10 @@ cursor: pointer;
     align-items: center;
     justify-content: space-between;
     word-break: break-all;
+}
+
+.torrentPlayer_playlist li.playing{
+background: linear-gradient(45deg, #fe4904, transparent);
 }
 
 .torrentPlayer_playlist_item_title{
@@ -929,7 +933,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="preLoadImagesCell">AceStream Ip:Port</div>'+
                      '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="acestream_server_address" data-service="AceStream" title="AceStream адресс и порт" value="localhost:6878"></div>'+
                      '</div>'+
-                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀) и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a>.</div>'+
+                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀). <span style="display:none;">и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a></span></div>'+
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.opens?'':' no_vis')+' opens">Открытые</div>'+
                      '<div class="mDiv_settings_body" style="'+(settings_visible.opens?'display: block':'display: none')+'">'+
@@ -959,7 +963,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                      '<div class="preLoadImagesCell">AceStream Ip:Port</div>'+
                      '<div class="preLoadImagesCell"><input style="width: 150px;text-align:center;transform: scale(0.9);" id="acestream_server_address" data-service="AceStream" title="AceStream адресс и порт" value="localhost:6878"></div>'+
                      '</div>'+
-                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀) и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a>.</div>'+
+                     '<div style="display:block;padding:2px;color:darkslateblue;font-size: 0.8rem;">Альфа версия: Нужен запущенный TorrServer или AceStream(лучше TorrServer😀). <span style="display:none;">и запущенный <a href="https://github.com/AlekPet/Rutor-Preview-Ajax/tree/master/servers/nodejs">сервер</a></span></div>'+
 
                      '</div>'+
                      '<div class="mDiv_title'+(settings_visible.opens?'':' no_vis')+' opens">Открытые</div>'+
@@ -1230,6 +1234,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
         return `<iframe src="${serverHTTP}?path_vid=${addr_path}&name_vid=${encodeURIComponent(v_name)}&index_vid=${vindex}" frameborder="0" scrolling="no"  />` //style="${isvideo.style}"
     }
 
+
     async function torrServer(params){
 
         const {down, magn, linkText, action='add'} = params,
@@ -1255,9 +1260,13 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                 if(data){
                     if(confirm('Запустить проигрыватель?')){
 
-                        let videos = data.file_stats.filter((elem, idx)=> /.(avi|mp4|mkv|mp3)/g.test(elem.path)),
+                        let videos = data.file_stats.filter((elem, idx)=> /.(avi|mp4|mkv|mp3|ogg|wav)$/g.test(elem.path)),
+                            //audios = data.file_stats.filter((elem, idx)=> /.(mp3|ogg|wav)$/g.test(elem.path)),
                             boxPlayer = $('#torrentPlayer'),
                             close_vid,inner_vid,inner_list,vid_info,vid_title = null
+
+                        const videoPlayer = $("<video>").attr({autoplay: true, preload: true, src:"", muted:true, controls: ""}).css({width: "100%"})
+                        const videoPlayerEl = videoPlayer.get(0)
 
                         if(boxPlayer.length) boxPlayer.remove()
 
@@ -1265,6 +1274,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
                         close_vid = $("<div class='torrentPlayer_close'>").attr('title','Закрыть').text('X').click(function(){
                             boxPlayer.hide(()=>{
+                                videoPlayerEl && videoPlayerEl.pause()
                                 boxPlayer.remove()
                             })
                         })
@@ -1279,22 +1289,53 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                         $('body').append(boxPlayer)
 
                         if(videos.length){
-                            let frame = returnIframe(inner_vid, torr_server_address, videos[0].path, data.hash)
-                            inner_vid.append(frame)
+                            let currentItem = 0
+                            videoPlayerEl.src = `http://${torr_server_address}/stream/fname?link=${data.hash}&index=${videos[currentItem].id}&play`;
+
+                            //let frame = returnIframe(inner_vid, torr_server_address, videos[0].path, data.hash)
+                            //inner_vid.append(frame)
+
+                            inner_vid.append(videoPlayer)
 
                             let ulpl = $("<ul class='torrentPlayer_playlist'></ul>")
-                            vid_info.text(videos[0].path)
+                            vid_info.text(videos[currentItem].path)
+
+
+                            videoPlayerEl.addEventListener("canplaythrough", (event) => {
+                                videoPlayerEl.play();
+                                ulpl.find("li.playing").removeClass("playing")
+                                ulpl.find("li")[currentItem].classList.add("playing")
+                            });
+
+                            videoPlayerEl.addEventListener("ended", (event) => {
+                                currentItem+=1;
+
+                                if(currentItem > videos.length-1){
+                                    currentItem = 0;
+                                }
+
+                                videoPlayerEl.src = `http://${torr_server_address}/stream/fname?link=${data.hash}&index=${videos[currentItem].id}&play`
+                                vid_info.text(videos[currentItem].path)
+                                videoPlayerEl.play()
+                            });
 
                             for(let [k,v] of videos.entries()){
                                 let li = $("<li></li>").click(function(){
-                                    let frame = returnIframe(inner_vid, torr_server_address, v.path, data.hash, v.id)
-                                    inner_vid.html(frame)
+                                    //let frame = returnIframe(inner_vid, torr_server_address, v.path, data.hash, v.id)
+                                    //inner_vid.html(frame)
+                                    currentItem=v.id - 1;
+                                    videoPlayerEl.src = `http://${torr_server_address}/stream/fname?link=${data.hash}&index=${v.id}&play`
+                                    videoPlayerEl.play()
                                     vid_info.text(v.path)
+
                                 }),
                                     title_item_list = `${k+1}. ${v.path}`,
                                     name_vid = $("<span class='torrentPlayer_playlist_item_title'>").text(title_item_list),
                                     size_vid = $("<span class='torrentPlayer_playlist_item_size'>").text(convertSizes(v.length))
 
+                                if(k === 0){
+                                    li.addClass("playing")
+                                }
                                 li.append(name_vid,size_vid)
                                 ulpl.append(li)
                             }
