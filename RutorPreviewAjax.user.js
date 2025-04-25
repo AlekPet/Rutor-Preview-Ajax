@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rutor Preview Ajax
 // @namespace    https://github.com/AlekPet/
-// @version      1.4.7.0
+// @version      1.4.7.1
 // @description  Предпросмотр раздач на сайте
 // @author       AlekPet
 // @license      MIT; https://opensource.org/licenses/MIT
@@ -249,17 +249,26 @@ cursor: pointer;
 }
 
 .torrentPlayer_playlist li.playing{
-background: linear-gradient(45deg, #fe4904, transparent);
 }
 
 .torrentPlayer_playlist_item_title{
     text-align: left;
     border-right: 2px dotted orange;
     width: 90%;
+    position: relative;
+}
+
+.playlist_item_progress{
+    position: absolute;
+    left: -5px;
+    top: 1px;
+    background: linear-gradient(45deg,transparent,#fe4904c9);
+    height: 100%;
+    border-radius: 4px;
 }
 
 .torrentPlayer_playlist_item_title_item_size {
-padding: 0 3px;
+    padding: 0 3px;
     width: 10%;
     text-align: center;
 }
@@ -1301,10 +1310,22 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                             vid_info.text(videos[currentItem].path)
 
 
+                            let currentPlayingProgress = null
                             videoPlayerEl.addEventListener("canplaythrough", (event) => {
                                 videoPlayerEl.play();
+                                ulpl.find("li.playing .playlist_item_progress").css("width", "0%")
                                 ulpl.find("li.playing").removeClass("playing")
                                 ulpl.find("li")[currentItem].classList.add("playing")
+                                currentPlayingProgress = ulpl.find("li.playing .playlist_item_progress")
+                            });
+
+                            videoPlayerEl.addEventListener("timeupdate", (event) => {
+                             const target = event.target;
+                                if(target.tagName === "VIDEO" && currentPlayingProgress){
+                                    const step = target.duration / 100;
+                                    const currentTimeProc = target.currentTime / step + "%";
+                                    currentPlayingProgress.css("width", currentTimeProc)
+                                }
                             });
 
                             videoPlayerEl.addEventListener("ended", (event) => {
@@ -1320,7 +1341,7 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
                             });
 
                             for(let [k,v] of videos.entries()){
-                                let li = $("<li></li>").click(function(){
+                                let li = $("<li></li>").click(function(ev){
                                     //let frame = returnIframe(inner_vid, torr_server_address, v.path, data.hash, v.id)
                                     //inner_vid.html(frame)
                                     currentItem=v.id - 1;
@@ -1330,11 +1351,16 @@ tr.backgr td > div {background: url(/agrrr/img/sort-bg.gif) 100% -86px no-repeat
 
                                 }),
                                     title_item_list = `${k+1}. ${v.path}`,
-                                    name_vid = $("<span class='torrentPlayer_playlist_item_title'>").text(title_item_list),
+                                    name_vid = $("<span class='torrentPlayer_playlist_item_title'>")
+                                .text(title_item_list)
+                                .append($("<span class='playlist_item_progress'>")
+                                .css({width: "0%"})),
+
                                     size_vid = $("<span class='torrentPlayer_playlist_item_size'>").text(convertSizes(v.length))
 
                                 if(k === 0){
                                     li.addClass("playing")
+                                    currentPlayingProgress = li.find(".playlist_item_progress")
                                 }
                                 li.append(name_vid,size_vid)
                                 ulpl.append(li)
